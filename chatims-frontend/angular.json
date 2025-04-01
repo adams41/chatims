@@ -86,7 +86,8 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "src/assets/animation" 
               }
             ],
             "styles": [
