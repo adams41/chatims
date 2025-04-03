@@ -17,4 +17,6 @@ public class UserDto {
 
     private Integer age;
 
+    private String password;
+
 }

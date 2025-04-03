@@ -20,7 +20,10 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, unique = false)
+    @Column(nullable = true, unique = false)
     private Integer age;
+
+    @Column(nullable = false, unique = false)
+    private String password;
 
 }
