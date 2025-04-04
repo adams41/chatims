@@ -1,5 +1,6 @@
 package com.app.chatims.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class MessageEntity {
 
     @ManyToOne
     @JoinColumn(name = "chat_id", nullable = false)
+    @JsonBackReference
     private ChatEntity chat;
 
     @Column(nullable = false)

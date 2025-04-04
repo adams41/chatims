@@ -1,5 +1,6 @@
 package com.app.chatims.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +24,7 @@ public class ChatEntity {
     private List<String> chatParticipants = new ArrayList<>();
 
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<MessageEntity> chatMessages = new ArrayList<>();
 }
 
