@@ -4,6 +4,7 @@ import com.app.chatims.entity.MessageEntity;
 import com.app.chatims.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,5 +25,11 @@ public class MessageController {
     @GetMapping("/{chatId}")
     public ResponseEntity<List<MessageEntity>> getMessages(@PathVariable Long chatId) {
         return ResponseEntity.ok(messageService.getMessagesByChatId(chatId));
+    }
+    @Transactional
+    @DeleteMapping("/{chatId}")
+    public ResponseEntity<Void> deleteMessages(@PathVariable Long chatId) {
+        messageService.deleteMessagesByChatId(chatId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -38,4 +38,9 @@ public class MessageServiceImpl implements MessageService {
             throw  new ChatNotFoundException("Chat with Id " + chatId + " not found!");
         }
     }
+
+    @Override
+    public void deleteMessagesByChatId(Long chatId) {
+        messageRepository.deleteByChat_ChatId(chatId);
+    }
 }

@@ -11,4 +11,6 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
 
     List<MessageEntity> findByChat_ChatId(Long chatId);
 
+    void deleteByChat_ChatId(Long chatId);
+
 }
