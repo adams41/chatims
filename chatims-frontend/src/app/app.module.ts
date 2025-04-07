@@ -4,6 +4,7 @@ import { NgModule } from '@angular/core';
 import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
 import { LottieComponent,provideLottieOptions  } from 'ngx-lottie';
 import player from 'lottie-web';
+import { FormsModule } from '@angular/forms';
 
 
 export function playerFactory() {  
@@ -17,7 +18,8 @@ export function playerFactory() {
   ],
   imports: [
     BrowserModule,
-    LottieComponent
+    LottieComponent,
+    FormsModule
   ],
   providers: [ 
     {
