@@ -28,7 +28,7 @@
             "input": "src/assets/animation",
             "output": "/assets/animation"
                        }
-            ],
+              ],
             "styles": [
               "src/styles.css"
             ],

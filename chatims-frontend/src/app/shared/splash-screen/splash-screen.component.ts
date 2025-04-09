@@ -1,26 +1,24 @@
-import { Component, OnInit} from '@angular/core';
-import { AnimationOptions, LottieComponent } from 'ngx-lottie';
-import { AnimationItem } from 'lottie-web';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import lottie from 'lottie-web';
 
 @Component({
   selector: 'app-splash-screen',
-  imports: [LottieComponent],
+  imports: [],
   templateUrl: './splash-screen.component.html',
   styleUrls: ['./splash-screen.component.css']
   
 })
 export class SplashScreenComponent implements OnInit {
  
-  options: AnimationOptions = {    
-    path: '/assets/animation/animation_dashboard.json',
-    autoplay: false
-  };  
-
-  constructor() { }  
-
-  ngOnInit(): void {  }
- 
-  onAnimate(animationItem: AnimationItem): void {    
-    console.log(animationItem);  
-  }
-}
+   
+    @ViewChild('lottie', { static: true }) lottieContainer!: ElementRef;
+   ngOnInit() { 
+       lottie.loadAnimation({
+         container: this.lottieContainer.nativeElement,
+         path: '/assets/animation/animation.json',
+         renderer: 'svg',
+         loop: true,
+         autoplay: true
+       });
+     }
+   }

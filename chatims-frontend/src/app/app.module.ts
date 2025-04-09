@@ -5,6 +5,7 @@ import { SplashScreenComponent } from './shared/splash-screen/splash-screen.comp
 import { LottieComponent,provideLottieOptions  } from 'ngx-lottie';
 import player from 'lottie-web';
 import { FormsModule } from '@angular/forms';
+import { AppRoutingModule } from './app-routing.module';
 
 
 export function playerFactory() {  
@@ -14,12 +15,14 @@ export function playerFactory() {
 @NgModule({
   declarations: [
     AppComponent,
-    SplashScreenComponent
+    SplashScreenComponentб
+    ChatComponent
   ],
   imports: [
     BrowserModule,
     LottieComponent,
-    FormsModule
+    FormsModule,
+    AppRoutingModule
   ],
   providers: [ 
     {
