@@ -1,15 +1,15 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component'; // Путь к SplashScreenComponent
-import { ChatComponent } from './chat/chat.component'; // Путь к ChatComponent
+import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';  
+import { ChatComponent } from './chat/chat.component';  
 
 const routes: Routes = [
-  { path: '', component: SplashScreenComponent }, // Путь по умолчанию
-  { path: 'chat', component: ChatComponent },     // Путь для компонента чата
+  { path: '', component: SplashScreenComponent },  
+  { path: 'chat', component: ChatComponent },     
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)], // Подключение маршрутов
-  exports: [RouterModule]                    // Экспорт маршрутов
+  imports: [RouterModule.forRoot(routes)],  
+  exports: [RouterModule]              
 })
 export class AppRoutingModule {}

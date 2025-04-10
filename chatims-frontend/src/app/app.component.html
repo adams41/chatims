@@ -1,1 +1,10 @@
-<app-splash-screen></app-splash-screen>
+<div *ngIf="!showChat" class="splash-wrapper">
+    <app-splash-screen></app-splash-screen>
+  
+    <button mat-fab extended class="start-button" (click)="goToChat()">
+      <mat-icon>chat</mat-icon>
+      <span class="start-text">Start</span>
+    </button>
+  </div>
+  
+  <app-chat *ngIf="showChat"></app-chat>

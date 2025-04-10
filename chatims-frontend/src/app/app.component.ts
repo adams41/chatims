@@ -1,14 +1,24 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import lottie from 'lottie-web';
+import { Component} from '@angular/core'; 
 import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
+import {MatButtonModule} from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common'; 
 import { ChatComponent } from './chat/chat.component';
+
 
 @Component({
   selector: 'app-root', 
   templateUrl: './app.component.html',
-  imports:[SplashScreenComponent, ChatComponent],
+  standalone: true,
+  imports:[SplashScreenComponent,  MatButtonModule,
+    MatIconModule, CommonModule, ChatComponent],
   styleUrl: './app.component.css'
 })
 export class AppComponent  {
- 
+  showChat = false;
+
+  goToChat() {
+    this.showChat = true;
+  }
+
 }
