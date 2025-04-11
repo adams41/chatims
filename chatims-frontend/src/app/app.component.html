@@ -1,3 +1,7 @@
+<button (click)="toggleDarkMode()" class="theme-toggle">
+    {{ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' }}
+  </button>
+  
 <div *ngIf="!showChat" class="splash-wrapper">
     <app-splash-screen></app-splash-screen>
   
@@ -8,3 +12,4 @@
   </div>
   
   <app-chat *ngIf="showChat"></app-chat>
+

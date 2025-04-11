@@ -21,4 +21,11 @@ export class AppComponent  {
     this.showChat = true;
   }
 
+  isDarkMode = false;
+
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    document.body.classList.toggle('dark-mode', this.isDarkMode);
+  }
 }
+
