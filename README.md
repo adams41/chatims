@@ -5,3 +5,17 @@ This Web Chat App allows you to chat with a person while selecting the gender of
 
 
 ![chatims-dashboard](https://github.com/user-attachments/assets/f312f327-649a-4aee-8c06-90019680badb)
+
+## Tech Stack
+
+Frontend: Angular
+
+Backend: Java + Spring Boot
+
+Database: H2
+
+REST API: Spring Web
+
+Build Tools: Maven
+
+Testing: JUnit / Karma & Jasmine
