@@ -8,14 +8,25 @@ This Web Chat App allows you to chat with a person while selecting the gender of
 
 ## Tech Stack
 
-Frontend: Angular
+- **Frontend:** Angular
 
-Backend: Java + Spring Boot
+- **Backend:**  Java + Spring Boot
 
-Database: H2
+- **Database:**  H2
 
-REST API: Spring Web
+- **REST API:**  Spring Web
 
-Build Tools: Maven
+- **Build Tools:**  Maven
 
-Testing: JUnit / Karma & Jasmine
+- **Testing:**  JUnit / Karma & Jasmine
+
+
+## Features
+
+🔒 Anonymous one-on-one chat
+
+❤️ Mutual likes unlock user profiles
+
+🤖 Chat with AI (planned)
+
+💬 Simple and responsive UI built with Angular
