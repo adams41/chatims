@@ -4,6 +4,7 @@ import {MatButtonModule} from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common'; 
 import { ChatComponent } from './chat/chat.component';
+import { RegisterComponent } from './user/register/register.component';
 
 
 @Component({
@@ -11,7 +12,7 @@ import { ChatComponent } from './chat/chat.component';
   templateUrl: './app.component.html',
   standalone: true,
   imports:[SplashScreenComponent,  MatButtonModule,
-    MatIconModule, CommonModule, ChatComponent],
+    MatIconModule, CommonModule, RegisterComponent],
   styleUrl: './app.component.css'
 })
 export class AppComponent  {

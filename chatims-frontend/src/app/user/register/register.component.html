@@ -1,0 +1,23 @@
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <label>
+      Username:
+      <input formControlName="username" />
+    </label>
+  
+    <label>
+      Gender:
+      <select formControlName="gender">
+        <option value="">-- Select --</option>
+        <option value="MALE">Male</option>
+        <option value="FEMALE">Female</option>
+      </select>
+    </label>
+  
+    <label>
+      Age:
+      <input type="number" formControlName="age" />
+    </label>
+  
+    <button type="submit" [disabled]="registerForm.invalid">Register</button>
+  </form>
+  
