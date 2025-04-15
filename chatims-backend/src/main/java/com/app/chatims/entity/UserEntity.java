@@ -1,5 +1,6 @@
 package com.app.chatims.entity;
 
+import com.app.chatims.util.Gender;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,9 @@ public class UserEntity {
 
     @Column(nullable = true, unique = false)
     private Integer age;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @Column(nullable = false, unique = false)
     private String password;
