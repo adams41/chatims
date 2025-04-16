@@ -21,7 +21,7 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = true, unique = false)
+    @Column(nullable = false, unique = false)
     private Integer age;
 
     @Enumerated(EnumType.STRING)
