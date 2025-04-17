@@ -1,15 +1,11 @@
-/* You can add global styles to this file, and also import other style files */
-
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
- /* Светлая тема по умолчанию */
+ 
  body {
     background-color: #fff;
     color: #000;
     transition: background-color 0.3s ease, color 0.3s ease;
-  }
-  
-  /* Тёмная тема */
+  } 
   body.dark-mode {
     background-color: #121212;
     color: #ffffff;

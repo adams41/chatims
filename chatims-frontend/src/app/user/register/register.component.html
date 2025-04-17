@@ -1,15 +1,33 @@
-<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-    <input formControlName="name" placeholder="Name" />
-    <input formControlName="email" placeholder="Email" />
-    <input formControlName="age" type="number" placeholder="Age" />
-    
-    <select formControlName="gender">
-      <option value="">Select Gender</option>
-      <option value="MALE">Male</option>
-      <option value="FEMALE">Female</option>
-    </select>
-  
-    <input formControlName="password" type="password" placeholder="Password" />
-  
-    <button type="submit" [disabled]="registerForm.invalid">Register</button>
-  </form>
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" type="email" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Age</mat-label>
+    <input matInput formControlName="age" type="number" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Gender</mat-label>
+    <mat-select formControlName="gender">
+      <mat-option value="MALE">Male</mat-option>
+      <mat-option value="FEMALE">Female</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Password</mat-label>
+    <input matInput type="password" formControlName="password" />
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid">
+    Register
+  </button>
+</form>
