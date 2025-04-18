@@ -20,4 +20,27 @@
     background-color: #1565c0;
   }
 
+  .back-button {
+    top: 1rem;
+    left: 1rem;
+    background-color: transparent;
+    color: #89031e;
+    border: 1px solid #1976d2;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    position: fixed;
+    transition: background-color 0.3s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #e3f2fd;
+  }
+  body.dark-mode .back-button {
+    color: #90caf9;
+    border-color: #90caf9;
+  }
+  body.dark-mode .back-button:hover {
+    background-color: #1e1e1e;
+  }
   
