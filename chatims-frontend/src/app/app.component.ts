@@ -1,9 +1,8 @@
 import { Component} from '@angular/core'; 
 import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
-import {MatButtonModule} from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common'; 
-import { ChatComponent } from './chat/chat.component';
 import { RegisterComponent } from './user/register/register.component';
 
 
