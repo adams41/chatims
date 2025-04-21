@@ -1,6 +1,19 @@
 <button class="back-button" (click)="goBack()">⬅ Back</button>
 
 <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+  <div class="image-upload" (click)="fileInput.click()">
+    <ng-container *ngIf="previewUrl; else placeholder">
+      <img [src]="previewUrl" alt="Preview" class="preview-img" />
+    </ng-container>
+  
+    <ng-template #placeholder>
+      <div class="upload-placeholder">+ Add Photo</div>
+    </ng-template>
+  
+    <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+  </div>
+  
+
   <mat-form-field appearance="fill" class="full-width">
     <mat-label>Name</mat-label>
     <input matInput formControlName="name" />

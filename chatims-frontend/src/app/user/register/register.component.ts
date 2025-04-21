@@ -35,6 +35,9 @@ export class RegisterComponent {
   isLoading = false;
   isRegistered = false;
 
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+
   
   constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
     this.registerForm = this.fb.group({
@@ -69,5 +72,20 @@ export class RegisterComponent {
       );
     }
   }
+
+  
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.selectedFile = input.files[0];
+  
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result as string;
+      };
+      reader.readAsDataURL(this.selectedFile);
+    }
+  }
+  
  
 }
