@@ -1,25 +1,30 @@
-package com.app.chatims.dto;
+    package com.app.chatims.dto;
 
-import com.app.chatims.util.Gender;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+    import com.app.chatims.util.Gender;
+    import lombok.AllArgsConstructor;
+    import lombok.Getter;
+    import lombok.NoArgsConstructor;
+    import lombok.Setter;
+    import org.springframework.web.multipart.MultipartFile;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class UserDto {
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public class UserDto {
 
-    private Long userId;
+        private Long userId;
 
-    private String name;
+        private String name;
 
-    private String email;
+        private String email;
 
-    private Integer age;
+        private Integer age;
 
-    private Gender gender;
+        private Gender gender;
 
-    private String password;
+        private String password;
 
-}
+        private MultipartFile photo;
+
+    }

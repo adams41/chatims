@@ -30,4 +30,6 @@ public class UserEntity {
     @Column(nullable = false, unique = false)
     private String password;
 
+    private String photoPath;
+
 }
