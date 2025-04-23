@@ -1,51 +1,51 @@
-<button class="back-button" (click)="goBack()">⬅ Back</button>
+  <button class="back-button" (click)="goBack()">⬅ Back</button>
 
-<form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
-  <div class="image-upload" (click)="fileInput.click()">
-    <ng-container *ngIf="previewUrl; else placeholder">
-      <img [src]="previewUrl" alt="Preview" class="preview-img" />
-    </ng-container>
-  
-    <ng-template #placeholder>
-      <div class="upload-placeholder">+ Add Photo</div>
-    </ng-template>
-  
-    <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+    <div class="image-upload" (click)="fileInput.click()">
+      <ng-container *ngIf="previewUrl; else placeholder">
+        <img [src]="previewUrl" alt="Preview" class="preview-img" />
+      </ng-container>
+    
+      <ng-template #placeholder>
+        <div class="upload-placeholder">+ Add Photo</div>
+      </ng-template>
+    
+      <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+    </div>
+    
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Age</mat-label>
+      <input matInput formControlName="age" type="number" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Gender</mat-label>
+      <mat-select formControlName="gender">
+        <mat-option value="MALE">Male</mat-option>
+        <mat-option value="FEMALE">Female</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Password</mat-label>
+      <input matInput type="password" formControlName="password" />
+    </mat-form-field>
+
+    <button mat-raised-button class = "registerButton" color="primary" type="submit" [disabled]="registerForm.invalid">
+      Register
+    </button>
+  </form>
+  <div class="overlay" *ngIf="isRegistered">
+    <app-progress-bar></app-progress-bar>
   </div>
-  
-
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Name</mat-label>
-    <input matInput formControlName="name" />
-  </mat-form-field>
-
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Email</mat-label>
-    <input matInput formControlName="email" type="email" />
-  </mat-form-field>
-
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Age</mat-label>
-    <input matInput formControlName="age" type="number" />
-  </mat-form-field>
-
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Gender</mat-label>
-    <mat-select formControlName="gender">
-      <mat-option value="MALE">Male</mat-option>
-      <mat-option value="FEMALE">Female</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Password</mat-label>
-    <input matInput type="password" formControlName="password" />
-  </mat-form-field>
-
-  <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid">
-    Register
-  </button>
-</form>
-<div class="overlay" *ngIf="isRegistered">
-  <app-progress-bar></app-progress-bar>
-</div>

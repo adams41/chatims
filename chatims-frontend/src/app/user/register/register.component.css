@@ -15,7 +15,16 @@
     color: white;
     background-color: #1976d2;
   }
+
+  .registerButton {
+    color: black;
+    background-color: white;
+  }
   
+  .registerButton:hover {
+    background-color: #e3f2fd;
+  }
+
   button:hover {
     background-color: #1565c0;
   }
@@ -23,8 +32,8 @@
   .back-button {
     top: 1rem;
     left: 1rem;
-    background-color: transparent;
-    color: #89031e;
+    background-color: white;
+    color: black;
     border: 1px solid #1976d2;
     padding: 0.5rem 1rem;
     border-radius: 4px;
