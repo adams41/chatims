@@ -1,14 +1,5 @@
 <button (click)="toggleDarkMode()" class="theme-toggle">
-    {{ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' }}
-  </button>
-  
-<div *ngIf="!showChat" class="splash-wrapper">
-    <app-splash-screen></app-splash-screen>
-  
-    <button mat-fab extended class="start-button" (click)="goToChat()">
-      <mat-icon>chat</mat-icon>
-      <span class="start-text">Let’s chat!</span>
-    </button>
-  </div>
+  {{ isDarkMode ? '🌞 Light Mode' : '🌙 Dark Mode' }}
+</button>
 
-  <app-register *ngIf="showChat" (back)="showChat = false"></app-register>
+<router-outlet></router-outlet>

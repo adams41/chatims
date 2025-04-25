@@ -20,8 +20,8 @@ import { ProgressBarComponent } from '../../shared/progress-bar/progress-bar/pro
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    ProgressBarComponent,
-    CommonModule
+    CommonModule,
+    ProgressBarComponent
   ],
   styleUrl: './register.component.css'
 })
@@ -29,7 +29,7 @@ export class RegisterComponent {
   @Output() back = new EventEmitter<void>();
 
   goBack() {
-    this.back.emit();
+    this.router.navigate(['']);
   }
 
   registerForm: FormGroup;
@@ -74,8 +74,10 @@ export class RegisterComponent {
           this.isRegistered = true;
           setTimeout(() => {
             this.isRegistered = false;
-          }, 10000);
-        },
+            this.router.navigate(['/welcome']);
+          }, 3000);
+         
+        },  
         error => {
           console.error('Registration failed', error);
           this.isLoading = false;

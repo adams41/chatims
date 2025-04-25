@@ -1,25 +1,23 @@
+import { CommonModule } from '@angular/common';
 import { Component} from '@angular/core'; 
-import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common'; 
-import { RegisterComponent } from './user/register/register.component';
+import { RouterModule } from '@angular/router';
 
 
 @Component({
   selector: 'app-root', 
   templateUrl: './app.component.html',
   standalone: true,
-  imports:[SplashScreenComponent,  MatButtonModule,
-    MatIconModule, CommonModule, RegisterComponent],
+  imports: [
+    CommonModule,
+    RouterModule,  
+    MatButtonModule,
+    MatIconModule
+  ],
   styleUrl: './app.component.css'
 })
 export class AppComponent  {
-  showChat = false;
-
-  goToChat() {
-    this.showChat = true;
-  }
 
   isDarkMode = false;
 
@@ -27,5 +25,6 @@ export class AppComponent  {
     this.isDarkMode = !this.isDarkMode;
     document.body.classList.toggle('dark-mode', this.isDarkMode);
   }
+ 
 }
 
