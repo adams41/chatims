@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ProgressBarComponent } from '../../shared/progress-bar/progress-bar/progress-bar.component';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-register',
@@ -41,7 +42,8 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private userService: UserService
   ) {
     this.registerForm = this.fb.group({
       name: ['', Validators.required],
@@ -72,6 +74,8 @@ export class RegisterComponent {
           console.log('Registration successful', response);
           this.isLoading = false;
           this.isRegistered = true;
+          const userName = this.registerForm.get('name')?.value;
+          this.userService.setUserName(userName);
           setTimeout(() => {
             this.isRegistered = false;
             this.router.navigate(['/welcome']);
