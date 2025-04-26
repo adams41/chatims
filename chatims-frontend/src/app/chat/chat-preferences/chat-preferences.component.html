@@ -1,0 +1,13 @@
+<div *ngIf="currentQuestion" [@slideAnimation] class="question-container">
+    <h2>{{ currentQuestion.text }}</h2>
+  
+    <div class="options">
+      <button *ngFor="let option of currentQuestion.options" (click)="selectOption(option)">
+        {{ option }}
+      </button>
+    </div>
+</div>
+
+<div *ngIf="currentQuestionIndex === questions.length" class="progress-container">
+    <div class="progress-bar" [style.width.%]="progress"></div>
+  </div>

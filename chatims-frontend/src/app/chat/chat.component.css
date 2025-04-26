@@ -34,3 +34,30 @@
     border-radius: 4px; 
   }
   
+  .user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    color: black;
+  }
+  
+  .user-details h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .user-details p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: black;
+  }

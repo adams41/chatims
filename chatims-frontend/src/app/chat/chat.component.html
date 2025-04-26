@@ -1,13 +1,21 @@
 <div class="chat-container">
-    <div class="messages">
-      <div *ngFor="let message of messages" class="message">
-        {{ message }}
-      </div>
-    </div>
-  
-    <div class="input-container">
-      <input [(ngModel)]="newMessage" placeholder="Enter message..." class="input-field"/>
-      <button (click)="sendMessage()">Send</button>
+ 
+  <div class="user-info-header">
+    
+    <div class="user-details">
+      <h3>{{ userName ? 'Name: ' +  userName : 'Name: Unknown' }}</h3>
+      <p>{{ userAge != null ? 'Age: ' + userAge : 'Age: Unknown' }}</p>
     </div>
   </div>
-  
+ 
+  <div class="messages">
+    <div *ngFor="let message of messages" class="message">
+      {{ message }}
+    </div>
+  </div>
+ 
+  <div class="input-container">
+    <input [(ngModel)]="newMessage" placeholder="Enter message..." class="input-field" />
+    <button (click)="sendMessage()" class="send-button">Send</button>
+  </div>
+</div>

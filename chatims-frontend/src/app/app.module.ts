@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { UserModule } from './user/user.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClient } from '@angular/common/http';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 export function playerFactory() {  
@@ -28,7 +29,8 @@ export function playerFactory() {
     AppRoutingModule,
     MatIconModule,
     UserModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    BrowserAnimationsModule
   ],
   providers: [ 
     {

@@ -1,0 +1,37 @@
+.question-container {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    position: relative;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .options button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+  }
+  
+  .options button:hover {
+    background-color: #f1f1f1;
+  }
+
+.progress-container {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    margin-top: 20px;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.5s;
+  }
+  
+   
+  
+  
+ 

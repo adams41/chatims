@@ -70,8 +70,10 @@ export class RegisterComponent {
       }
 
       this.http.post('/users/register', formData).subscribe(
-        response => {
+        (response: any) => {
           console.log('Registration successful', response);
+          this.userService.setUserName(response.name);
+          this.userService.setUserAge(response.age);
           this.isLoading = false;
           this.isRegistered = true;
           const userName = this.registerForm.get('name')?.value;
