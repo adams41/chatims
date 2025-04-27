@@ -12,6 +12,7 @@
     border: 1px solid #ccc;
     padding: 10px;
     margin-bottom: 10px;
+    border-radius: 5px;
   }
   
   .message {
@@ -34,14 +35,13 @@
     border-radius: 4px; 
   }
   
-  .user-info {
+  .user-info-header {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
     background-color: #fff;
     padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
   }
   
   .user-details {
