@@ -14,6 +14,7 @@ export class ChatComponent implements OnInit {
   newMessage: string = '';
   userName: string | null = null;
   userAge: number | null = null;
+  userPhoto: string | null = null;
   
   constructor(private userService: UserService) {}
 
@@ -21,7 +22,8 @@ export class ChatComponent implements OnInit {
      
     this.userName = this.userService.getUserName();
     this.userAge = this.userService.getUserAge();
-    
+    this.userPhoto = this.userService.getUserPhoto();
+ 
   }
   sendMessage() {
     if (this.newMessage.trim()) {

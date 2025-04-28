@@ -1,7 +1,7 @@
 <div class="chat-container">
  
   <div class="user-info-header">
-    
+    <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="user-photo">
     <div class="user-details">
       <h3>{{ userName ? 'Name: ' +  userName : 'Name: Unknown' }}</h3>
       <p>{{ userAge != null ? 'Age: ' + userAge : 'Age: Unknown' }}</p>

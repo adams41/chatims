@@ -74,6 +74,7 @@ export class RegisterComponent {
           console.log('Registration successful', response);
           this.userService.setUserName(response.name);
           this.userService.setUserAge(response.age);
+          this.userService.setUserPhoto(response.photo); 
           this.isLoading = false;
           this.isRegistered = true;
           const userName = this.registerForm.get('name')?.value;
