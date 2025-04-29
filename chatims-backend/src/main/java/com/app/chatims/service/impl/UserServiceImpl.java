@@ -5,6 +5,8 @@ import com.app.chatims.entity.UserEntity;
 import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,12 +16,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -30,34 +35,43 @@ public class UserServiceImpl implements UserService {
         String photoPath = savePhoto(userDto.getPhoto());
 
 
-       UserEntity user = new UserEntity();
-       user.setName(userDto.getName());
-       user.setEmail(userDto.getEmail());
-       user.setPassword(userDto.getPassword());
-       user.setAge(userDto.getAge());
-       user.setGender(userDto.getGender());
-       user.setPhotoPath(photoPath);
-       return userRepository.save(user);
+        UserEntity user = new UserEntity();
+        user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setAge(userDto.getAge());
+        user.setGender(userDto.getGender());
+        user.setPhotoPath(photoPath);
+        return userRepository.save(user);
 
     }
 
     public String savePhoto(MultipartFile photo) throws IOException {
         if (photo == null || photo.isEmpty()) {
+            logger.debug("Photo is not presented.");
             return null;
         }
 
-        String photoName = photo.getOriginalFilename();
-        String photoPath = uploadDir + File.separator + photoName;
-
+        String uniqueFileName = UUID.randomUUID() + "_" + sanitizeFileName(photo.getOriginalFilename());
+        String photoPath = Paths.get(uploadDir, uniqueFileName).toAbsolutePath().toString();
 
         File uploadDirFile = new File(uploadDir);
         if (!uploadDirFile.exists()) {
             uploadDirFile.mkdirs();
         }
 
+        logger.debug("Сохранение фотографии по пути: {}", photoPath);
         Files.copy(photo.getInputStream(), Paths.get(photoPath));
 
-        return photoPath;
+
+        return "/" + uniqueFileName;
+    }
+
+    private String sanitizeFileName(String fileName) {
+        if (fileName == null) {
+            return "unknown";
+        }
+        return fileName.replaceAll("[^a-zA-Z0-9.-]", "_");
     }
 
     @Override

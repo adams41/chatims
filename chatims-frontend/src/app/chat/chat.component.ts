@@ -19,12 +19,28 @@ export class ChatComponent implements OnInit {
   constructor(private userService: UserService) {}
 
   ngOnInit(): void {
-     
-    this.userName = this.userService.getUserName();
-    this.userAge = this.userService.getUserAge();
-    this.userPhoto = this.userService.getUserPhoto();
- 
-  }
+    this.loadUserData();
+}
+
+loadUserData(): void {
+    this.userService.getUserData(1).subscribe({
+        next: (user) => {
+            console.log('User data received:', user);
+            this.userName = this.userService.getUserName();
+            this.userAge = this.userService.getUserAge();
+            this.userPhoto = this.userService.getUserPhoto();
+            if (this.userPhoto) {
+                this.userPhoto = `http://localhost:8080${this.userPhoto}`;
+            }  
+            console.log('Registered userPhoto:', this.userPhoto);
+        },
+        error: (error) => {
+            console.error('Error by loading user data:', error);
+            this.userPhoto = null;
+        }
+    });
+}
+  
   sendMessage() {
     if (this.newMessage.trim()) {
       this.messages.push(this.newMessage);

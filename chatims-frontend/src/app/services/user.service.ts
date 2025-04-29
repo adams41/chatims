@@ -1,6 +1,17 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
+import { tap } from 'rxjs/operators';
+
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  age: number;
+  gender: string;
+  photoPath: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -29,10 +40,17 @@ export class UserService {
     return this.userAge;
   }
 
-  getUserData(userId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${userId}`);
+  getUserData(userId: number): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${userId}`).pipe(
+        tap((user) => {
+          
+            this.userName = user.name;
+            this.userAge = user.age;
+            this.userPhoto = user.photoPath;
+        })
+    );
   }
-
+  
   setUserPhoto(photoUrl: string): void {
     this.userPhoto = photoUrl;
   }
@@ -40,5 +58,6 @@ export class UserService {
   getUserPhoto(): string | null {
     return this.userPhoto;
   }
+
 
 }
