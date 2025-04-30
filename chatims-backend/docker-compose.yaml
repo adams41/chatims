@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_USER=
+      - KEYCLOAK_PASSWORD=
+      - KEYCLOAK_REALM=chatims-app
+      - KEYCLOAK_HTTP_PORT=8080
+      - KEYCLOAK_ADMIN=
+      - KEYCLOAK_ADMIN_PASSWORD=
+    ports:
+      - 8080:8080
+    command: ["start-dev"]
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+    container_name: backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - "8081:8080"
+    depends_on:
+      - keycloak
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+networks:
+  chat-network:
+    driver: bridge

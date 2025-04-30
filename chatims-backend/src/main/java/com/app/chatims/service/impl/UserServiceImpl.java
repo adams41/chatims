@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
             uploadDirFile.mkdirs();
         }
 
-        logger.debug("Сохранение фотографии по пути: {}", photoPath);
+        logger.debug("Photo saved by path: {}", photoPath);
         Files.copy(photo.getInputStream(), Paths.get(photoPath));
 
 
