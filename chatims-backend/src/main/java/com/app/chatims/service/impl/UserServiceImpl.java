@@ -3,6 +3,7 @@ package com.app.chatims.service.impl;
 import com.app.chatims.dto.UserDto;
 import com.app.chatims.entity.UserEntity;
 import com.app.chatims.repository.UserRepository;
+import com.app.chatims.service.KeycloakService;
 import com.app.chatims.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,6 +23,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final KeycloakService keycloakService;
+
     private final UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -34,14 +37,21 @@ public class UserServiceImpl implements UserService {
 
         String photoPath = savePhoto(userDto.getPhoto());
 
+        String keycloakId = keycloakService.registerUserInKeycloak(
+                userDto.getName(),
+                userDto.getEmail(),
+                userDto.getPassword()
+        );
 
         UserEntity user = new UserEntity();
         user.setName(userDto.getName());
         user.setEmail(userDto.getEmail());
-        user.setPassword(userDto.getPassword());
         user.setAge(userDto.getAge());
         user.setGender(userDto.getGender());
         user.setPhotoPath(photoPath);
+        user.setKeycloakId(keycloakId);
+
+
         return userRepository.save(user);
 
     }

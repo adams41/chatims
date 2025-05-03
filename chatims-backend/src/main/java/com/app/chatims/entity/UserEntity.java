@@ -15,6 +15,9 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
+    @Column(nullable = false, unique = true)
+    private String keycloakId;
+
     @Column(nullable = false, unique = false)
     private String name;
 
@@ -26,9 +29,6 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
-
-    @Column(nullable = false, unique = false)
-    private String password;
 
     private String photoPath;
 
