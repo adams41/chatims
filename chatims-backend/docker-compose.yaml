@@ -5,12 +5,12 @@ services:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: keycloak
     environment:
-      - KEYCLOAK_USER=
-      - KEYCLOAK_PASSWORD=
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
       - KEYCLOAK_REALM=chatims-app
       - KEYCLOAK_HTTP_PORT=8080
-      - KEYCLOAK_ADMIN=
-      - KEYCLOAK_ADMIN_PASSWORD=
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
       - 8080:8080
     command: ["start-dev"]
