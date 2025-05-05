@@ -1,7 +1,7 @@
 # Chatims
 
 
-This Web Chat App allows you to chat with a person while selecting the gender of your partner. If both users mutually like each other, they can view each other's profiles. Currently, the app is limited to AI interactions, but future updates will enable chatting with random users.
+This Web Chat App allows users to engage in conversations with others, with the option to specify preferences such as gender. Currently, interactions are limited to AI-generated responses, but future updates will enable chatting with random users. If both users express interest, they can choose to share their profiles with each other.
 
 
 ![chatims-dashboard](https://github.com/user-attachments/assets/f312f327-649a-4aee-8c06-90019680badb)
