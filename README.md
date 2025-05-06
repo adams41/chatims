@@ -30,3 +30,5 @@ This Web Chat App allows users to engage in conversations with others, with the 
 🤖 Chat with AI (planned)
 
 💬 Simple and responsive UI built with Angular
+
+🛡️ Secure authentication powered by Keycloak
