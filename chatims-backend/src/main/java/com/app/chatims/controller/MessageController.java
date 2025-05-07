@@ -24,8 +24,10 @@ public class MessageController {
 
     @GetMapping("/{chatId}")
     public ResponseEntity<List<MessageEntity>> getMessages(@PathVariable Long chatId) {
-        return ResponseEntity.ok(messageService.getMessagesByChatId(chatId));
+        List<MessageEntity> messages = messageService.getMessagesByChatId(chatId);
+        return messages.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(messages);
     }
+
     @Transactional
     @DeleteMapping("/{chatId}")
     public ResponseEntity<Void> deleteMessages(@PathVariable Long chatId) {
