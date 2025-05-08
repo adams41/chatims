@@ -1,9 +1,8 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router'; 
-import lottie from 'lottie-web'; 
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-splash-screen',
@@ -16,17 +15,20 @@ import { CommonModule } from '@angular/common';
 export class SplashScreenComponent implements OnInit {
   @ViewChild('lottie', { static: true }) lottieContainer!: ElementRef;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router,  @Inject(PLATFORM_ID) private platformId: Object) {}
 
    ngOnInit() { 
-       lottie.loadAnimation({
-         container: this.lottieContainer.nativeElement,
-         path: '/assets/animation/animation.json',
-         renderer: 'svg',
-         loop: true,
-         autoplay: true
-       });
-     }
+    if (isPlatformBrowser(this.platformId)) {
+      import('lottie-web').then((lottie) => {
+        const animation = (lottie as any).loadAnimation({
+          container: this.lottieContainer.nativeElement,
+          path: '/assets/animation/animation.json',
+          renderer: 'svg',
+          loop: true,
+          autoplay: true
+        });
+      });
+    }}
 
   goToRegister() {
     this.router.navigate(['/register']);
