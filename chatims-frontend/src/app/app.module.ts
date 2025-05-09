@@ -3,7 +3,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
 import { LottieComponent,provideLottieOptions  } from 'ngx-lottie';
-import player from 'lottie-web';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,8 +12,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
-export function playerFactory() {  
-  return player; 
+export function playerFactory() {
+  return import('lottie-web').then(m => m.default);
 }
 
 @NgModule({

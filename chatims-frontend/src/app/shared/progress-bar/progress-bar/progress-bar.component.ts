@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import lottie from 'lottie-web';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, ViewChild, ElementRef, PLATFORM_ID, Inject } from '@angular/core';
 
 @Component({
   selector: 'app-progress-bar',
@@ -8,18 +8,21 @@ import lottie from 'lottie-web';
   styleUrl: './progress-bar.component.css'
 })
 export class ProgressBarComponent implements OnInit {
- 
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
    
   @ViewChild('lottie', { static: true }) lottieContainer!: ElementRef;
- ngOnInit() { 
-     lottie.loadAnimation({
-       container: this.lottieContainer.nativeElement,
-       path: '/assets/animation/animation-progress.json',
-       renderer: 'svg',
-       loop: true,
-       autoplay: true
-     });
-   }
- }{
-
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      import('lottie-web').then((lottieModule) => {
+        const lottie = lottieModule.default;
+        lottie.loadAnimation({
+          container: this.lottieContainer.nativeElement,
+          path: '/assets/animation/animation-progress.json',
+          renderer: 'svg',
+          loop: true,
+          autoplay: true
+        });
+      });
+    }
+  }
 }
