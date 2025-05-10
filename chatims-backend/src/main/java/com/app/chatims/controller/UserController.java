@@ -34,7 +34,8 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
 
-        UserDto userDto = new UserDto(null, name, email, age, gender, password, photo);
+
+        UserDto userDto = new UserDto(null, null, name, email, age, gender, password, photo);
         UserEntity user = userService.registerUser(userDto);
 
         return ResponseEntity.ok(user);

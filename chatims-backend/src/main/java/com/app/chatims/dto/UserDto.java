@@ -16,6 +16,8 @@
 
         private Long userId;
 
+        private String keycloakId;
+
         private String name;
 
         private String email;
