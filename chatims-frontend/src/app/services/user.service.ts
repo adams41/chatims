@@ -21,7 +21,7 @@ export class UserService {
   private userAge: number | null = null;
   private userPhoto: string | null = null;
 
-  private apiUrl = 'http://localhost:8080/users';
+  private apiUrl = 'http://localhost:8081/users';
 
   constructor(private http: HttpClient) {}
 

@@ -69,27 +69,25 @@ export class RegisterComponent {
         formData.append('photo', this.selectedFile, this.selectedFile.name);
       }
 
-      this.http.post('/users/register', formData).subscribe(
-        (response: any) => {
+      this.http.post('/users/register', formData).subscribe({
+        next: (response: any) => {
           console.log('Registration successful', response);
           this.userService.setUserName(response.name);
           this.userService.setUserAge(response.age);
           this.userService.setUserPhoto(response.photo); 
           this.isLoading = false;
           this.isRegistered = true;
-          const userName = this.registerForm.get('name')?.value;
-          this.userService.setUserName(userName);
+      
           setTimeout(() => {
             this.isRegistered = false;
             this.router.navigate(['/welcome']);
           }, 3000);
-         
-        },  
-        error => {
+        },
+        error: (error) => {
           console.error('Registration failed', error);
           this.isLoading = false;
         }
-      );
+      });
     }
   }
 

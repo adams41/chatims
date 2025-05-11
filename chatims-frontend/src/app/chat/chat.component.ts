@@ -30,7 +30,7 @@ loadUserData(): void {
             this.userAge = this.userService.getUserAge();
             this.userPhoto = this.userService.getUserPhoto();
             if (this.userPhoto) {
-                this.userPhoto = `http://localhost:8080${this.userPhoto}`;
+                this.userPhoto = `http://localhost:8081${this.userPhoto}`;
             }  
             console.log('Registered userPhoto:', this.userPhoto);
         },
