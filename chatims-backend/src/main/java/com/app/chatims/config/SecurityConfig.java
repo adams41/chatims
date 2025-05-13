@@ -28,10 +28,6 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.sameOrigin())
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/oauth2/authorization/keycloak")
-                        .defaultSuccessUrl("/chat", true)
-                )
 
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")
