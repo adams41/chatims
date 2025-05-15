@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router'; 
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { KeycloakService } from '../../utils/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-splash-screen',
@@ -15,7 +16,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 export class SplashScreenComponent implements OnInit {
   @ViewChild('lottie', { static: true }) lottieContainer!: ElementRef;
 
-  constructor(private router: Router,  @Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(private router: Router,
+    private keycloakService: KeycloakService,  @Inject(PLATFORM_ID) private platformId: Object) {}
 
    ngOnInit() { 
     if (isPlatformBrowser(this.platformId)) {
@@ -30,8 +32,9 @@ export class SplashScreenComponent implements OnInit {
       });
     }}
 
-  goToRegister() {
-    this.router.navigate(['/register']);
+ async goToRegister() {
+  await this.keycloakService.init();
+  await this.keycloakService.login();
   }
 
    }

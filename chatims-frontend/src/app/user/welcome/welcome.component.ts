@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { Router } from '@angular/router';
+import { KeycloakService } from '../../utils/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-welcome',
@@ -9,17 +10,20 @@ import { Router } from '@angular/router';
   styleUrl: './welcome.component.css'
 })
 export class WelcomeComponent implements OnInit {
-  userName: string | null = null;
+  userName: string = '';
 
-  constructor(private userService: UserService, private router: Router,) {}
+  constructor(private userService: UserService,
+    private router: Router,
+    private keycloakService: KeycloakService,) {}
+
+    ngOnInit(): void {
+      this.userName = this.keycloakService.fullName;
 
 
-  ngOnInit(): void {   
-    this.userName = this.userService.getUserName(); 
     setTimeout(() => {
     this.router.navigate(['/chat-preferences']);
     }, 3000);
-     
 
   }
+
 }

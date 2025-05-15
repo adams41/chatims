@@ -31,10 +31,10 @@ export class UserService {
 
   getUserName(): string | null {
     return this.userName;
-  } 
+  }
   setUserAge(age: number): void {
     this.userAge = age;
-  } 
+  }
 
   getUserAge(): number | null {
     return this.userAge;
@@ -43,21 +43,28 @@ export class UserService {
   getUserData(userId: number): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${userId}`).pipe(
         tap((user) => {
-          
+
             this.userName = user.name;
             this.userAge = user.age;
             this.userPhoto = user.photoPath;
         })
     );
   }
-  
+
   setUserPhoto(photoUrl: string): void {
     this.userPhoto = photoUrl;
   }
-  
+
   getUserPhoto(): string | null {
     return this.userPhoto;
   }
 
+  getUserByKeycloakId(sub: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/by-sub/${sub}`).pipe(
+      tap((user) => {
+        this.userName = user.name;
+      })
+    );
+  }
 
 }

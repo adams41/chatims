@@ -1,6 +1,6 @@
   import { NgModule } from '@angular/core';
-  import { RouterModule, Routes } from '@angular/router'; 
-  import { ChatComponent } from './chat/chat.component'; 
+  import { RouterModule, Routes } from '@angular/router';
+  import { ChatComponent } from './chat/chat.component';
   import { WelcomeComponent } from './user/welcome/welcome.component';
   import { RegisterComponent } from './user/register/register.component';
   import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
@@ -15,7 +15,7 @@
   ];
 
   @NgModule({
-    imports: [RouterModule.forRoot(routes)],  
-    exports: [RouterModule]              
+    imports: [RouterModule.forRoot(routes)],
+    exports: [RouterModule]
   })
   export class AppRoutingModule {}
