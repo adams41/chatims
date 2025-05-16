@@ -53,9 +53,7 @@ export class KeycloakService {
   }
 
   get fullName(): string {
-    return this._keycloak?.tokenParsed?.['preferred_username'] 
-        || this._keycloak?.tokenParsed?.['given_name'] 
-        || 'User';
+    return this._keycloak?.tokenParsed?.['name']
   }
 
   logout() {

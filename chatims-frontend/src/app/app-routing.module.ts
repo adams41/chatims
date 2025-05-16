@@ -11,7 +11,8 @@
     { path: 'register', component: RegisterComponent },
     { path: 'welcome', component: WelcomeComponent },
     { path: 'chat', component: ChatComponent },
-    { path: 'chat-preferences', component: ChatPreferencesComponent }
+    { path: 'chat-preferences', component: ChatPreferencesComponent },
+    { path: '**', redirectTo: '' }
   ];
 
   @NgModule({

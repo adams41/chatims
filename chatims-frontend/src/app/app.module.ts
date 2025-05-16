@@ -6,7 +6,6 @@ import { LottieComponent,provideLottieOptions  } from 'ngx-lottie';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { MatIconModule } from '@angular/material/icon';
-import { UserModule } from './user/user.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClient } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -19,15 +18,14 @@ export function playerFactory() {
 @NgModule({
   declarations: [
     AppComponent,
-    SplashScreenComponent
+    SplashScreenComponent,
+    LottieComponent
   ],
   imports: [
     BrowserModule,
-    LottieComponent,
     FormsModule,
     AppRoutingModule,
     MatIconModule,
-    UserModule,
     ReactiveFormsModule,
     BrowserAnimationsModule
   ],
@@ -36,7 +34,7 @@ export function playerFactory() {
       provide: provideLottieOptions,
       useFactory: playerFactory   
     },
-    [provideHttpClient()]
+    provideHttpClient()
   ],
   bootstrap: [AppComponent],
 })

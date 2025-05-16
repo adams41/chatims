@@ -13,5 +13,6 @@ public interface UserService {
     UserEntity getUserById(Long userId);
     List<UserEntity> getUsersForSwipe();
     String savePhoto(MultipartFile photo) throws IOException;
+    UserEntity getUserByKeycloakId(String keycloakId);
 
 }

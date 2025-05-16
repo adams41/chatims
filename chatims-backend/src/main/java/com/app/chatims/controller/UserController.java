@@ -52,10 +52,16 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserEntity>> getUser () {
+    public ResponseEntity<List<UserEntity>> getUsers () {
         List<UserEntity> users = userService.getUsersForSwipe();
         return ResponseEntity.ok(users);
 
+    }
+
+    @GetMapping("/by-sub/{sub}")
+    public ResponseEntity<UserEntity> getUserByKeycloakId(@PathVariable String sub) {
+        UserEntity user = userService.getUserByKeycloakId(sub);
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
 

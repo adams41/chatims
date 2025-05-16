@@ -1,3 +1,11 @@
 <div class="welcome-container">
-    <h1 class="fade-in">Welcome {{userName}} !</h1>
-</div>
+    <div *ngIf="isLoading" class="spinner"></div>
+    
+    <div *ngIf="!isLoading">
+      <h1 class="fade-in">Welcome {{userName}}!</h1>
+      
+      <div class="profile-info">
+        <p>We're glad to see you here!</p>
+      </div>
+    </div>
+  </div>
