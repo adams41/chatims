@@ -5,6 +5,7 @@ import com.app.chatims.entity.UserEntity;
 import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.KeycloakService;
 import com.app.chatims.service.UserService;
+import com.app.chatims.util.Gender;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +52,32 @@ public class UserServiceImpl implements UserService {
         user.setPhotoPath(photoPath);
         user.setKeycloakId(keycloakId);
 
-
         return userRepository.save(user);
+    }
 
+    @Override
+    public UserEntity completeUserProfile(
+            String keycloakId,
+            String name,
+            Integer age,
+            Gender gender,
+            MultipartFile photo
+    ) throws IOException {
+        if (userRepository.findByKeycloakId(keycloakId).isPresent()) {
+            throw new RuntimeException("User with this Keycloak ID already exists");
+        }
+
+        String photoPath = savePhoto(photo);
+
+        UserEntity user = new UserEntity();
+        user.setName(name);
+        user.setAge(age);
+        user.setGender(gender);
+        user.setPhotoPath(photoPath);
+        user.setKeycloakId(keycloakId);
+
+        logger.debug("Completing profile for Keycloak user: {}", keycloakId);
+        return userRepository.save(user);
     }
 
     public String savePhoto(MultipartFile photo) throws IOException {
@@ -72,7 +96,6 @@ public class UserServiceImpl implements UserService {
 
         logger.debug("Photo saved by path: {}", photoPath);
         Files.copy(photo.getInputStream(), Paths.get(photoPath));
-
 
         return "/" + uniqueFileName;
     }

@@ -40,7 +40,7 @@ export class KeycloakService {
     }
   
     await this._keycloak.login({
-      redirectUri: window.location.origin + '/welcome'
+      redirectUri: window.location.origin + '/register'
     });
   }
 
@@ -54,6 +54,10 @@ export class KeycloakService {
 
   get fullName(): string {
     return this._keycloak?.tokenParsed?.['name']
+  }
+
+  get email(): string | null {
+    return this._keycloak?.tokenParsed?.['email'] as string || null;
   }
 
   logout() {

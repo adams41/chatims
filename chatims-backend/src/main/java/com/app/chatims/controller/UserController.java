@@ -20,29 +20,22 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<UserEntity> createUser(
+    @PostMapping("/complete-profile")
+    public ResponseEntity<UserEntity> completeProfile(
+            @RequestParam("keycloakId") String keycloakId,
             @RequestParam("name") String name,
-            @RequestParam("email") String email,
-            @RequestParam("age") int age,
-            @RequestParam("gender") Gender gender,
-            @RequestParam("password") String password,
-            @RequestParam(value = "photo") MultipartFile photo) throws IOException {
-
+            @RequestParam("age") Integer age,
+            @RequestParam("gender") String gender,
+            @RequestParam(value = "photo", required = false) MultipartFile photo
+    ) {
         try {
-            if (photo == null || photo.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-            }
-
-
-        UserDto userDto = new UserDto(null, null, name, email, age, gender, password, photo);
-        UserEntity user = userService.registerUser(userDto);
-
-        return ResponseEntity.ok(user);
-    } catch (IOException e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-    }}
+            UserEntity user = userService.completeUserProfile(keycloakId, name, age, Gender.valueOf(gender), photo);
+            return ResponseEntity.ok(user);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserEntity> getUser (@PathVariable Long id) {
