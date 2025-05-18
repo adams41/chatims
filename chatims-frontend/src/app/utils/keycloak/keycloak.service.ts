@@ -27,18 +27,18 @@ export class KeycloakService {
       realm: 'chatims-app',
       clientId: 'chatims-client',
     });
-  
+
     return this._keycloak.init({
       onLoad: 'check-sso',
       checkLoginIframe: false,
     });
   }
- 
+
   async login(): Promise<void> {
     if (!this._keycloak) {
       throw new Error('Keycloak is not initialized. Call init() first.');
     }
-  
+
     await this._keycloak.login({
       redirectUri: window.location.origin + '/register'
     });
@@ -66,5 +66,19 @@ export class KeycloakService {
 
   accountManagement() {
     return this._keycloak?.accountManagement();
+  }
+
+  async refreshToken(): Promise<boolean> {
+    if (!this._keycloak) {
+      return false;
+    }
+
+    try {
+      const refreshed = await this._keycloak.updateToken(30);
+      return refreshed;
+    } catch (error) {
+      console.error('Failed to refresh token', error);
+      return false;
+    }
   }
 }
