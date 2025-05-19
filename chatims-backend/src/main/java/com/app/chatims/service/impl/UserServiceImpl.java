@@ -120,7 +120,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity getUserByKeycloakId(String keycloakId) {
-        return userRepository.findByKeycloakId(keycloakId)
-                .orElseThrow(() -> new RuntimeException("User with keycloak ID " + keycloakId + " not found!"));
+        return userRepository.findByKeycloakId(keycloakId).orElse(null);
     }
 }

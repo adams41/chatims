@@ -48,10 +48,9 @@ export class KeycloakService {
     return this._keycloak?.tokenParsed?.sub as string;
   }
 
-  get isTokenValid(): boolean {
-    return !this._keycloak?.isTokenExpired();
-  }
-
+ get isTokenValid(): boolean {
+  return !!this._keycloak?.token && !this._keycloak?.isTokenExpired();
+}
   get fullName(): string {
     return this._keycloak?.tokenParsed?.['name']
   }

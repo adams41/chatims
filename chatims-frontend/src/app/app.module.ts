@@ -6,8 +6,7 @@ import { LottieComponent,provideLottieOptions  } from 'ngx-lottie';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { MatIconModule } from '@angular/material/icon';
-import { ReactiveFormsModule } from '@angular/forms';
-import { provideHttpClient } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms'; 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
@@ -33,8 +32,7 @@ export function playerFactory() {
     {
       provide: provideLottieOptions,
       useFactory: playerFactory   
-    },
-    provideHttpClient()
+    }
   ],
   bootstrap: [AppComponent],
 })

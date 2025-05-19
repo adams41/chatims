@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';  
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -36,12 +36,12 @@ export class RegisterComponent implements OnInit {
   isRegistered = false;
   selectedFile: File | null = null;
   previewUrl: string | null = null;
-  
+
   isKeycloakUser = false;
   keycloakId: string | null = null;
   userName: string | null = null;
-  
-  private apiUrl = environment.apiUrl || 'http://localhost:8081'; 
+
+  private apiUrl = environment.apiUrl || 'http://localhost:8081';
 
   constructor(
     private fb: FormBuilder,
@@ -56,15 +56,21 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { 
-    if (this.keycloakService.isTokenValid) {
-      this.isKeycloakUser = true;
-      this.keycloakId = this.keycloakService.userId;
-      this.userName = this.keycloakService.fullName;
-       
-      this.checkExistingUser();
-    } else { 
-      this.redirectToKeycloakAuth();
+  async ngOnInit(): Promise<void> {
+    try {
+      await this.keycloakService.init();
+
+      if (this.keycloakService.isTokenValid) {
+        this.isKeycloakUser = true;
+        this.keycloakId = this.keycloakService.userId;
+        this.userName = this.keycloakService.fullName;
+
+        this.checkExistingUser();
+      } else {
+        this.redirectToKeycloakAuth();
+      }
+    } catch (error) {
+      console.error('[RegisterComponent] Keycloak init failed', error);
     }
   }
 
@@ -72,22 +78,22 @@ export class RegisterComponent implements OnInit {
     if (!this.keycloakId) return;
 
     this.isLoading = true;
-     
+
     const headers = this.createAuthHeaders();
-    
+
     this.http.get(`${this.apiUrl}/users/keycloak/${this.keycloakId}`, { headers }).subscribe({
       next: (user: any) => {
-       
+
         this.userService.setUserName(user.name);
         this.userService.setUserAge(user.age);
         this.userService.setUserPhoto(user.photoPath);
-        
+
         this.isLoading = false;
         this.router.navigate(['/welcome']);
       },
       error: (error) => {
         console.log('User not found in database, needs to complete profile', error);
- 
+
         this.isLoading = false;
       }
     });
@@ -95,6 +101,11 @@ export class RegisterComponent implements OnInit {
 
   private createAuthHeaders(): HttpHeaders {
     const token = this.keycloakService.getToken();
+    if (!token) {
+      console.error('Token is missing!');
+      this.redirectToKeycloakAuth();
+      return new HttpHeaders();
+    }
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
@@ -110,13 +121,12 @@ export class RegisterComponent implements OnInit {
       this.isLoading = true;
 
       const formData = new FormData();
-      
-   
+
       formData.append('age', this.registerForm.get('age')?.value);
       formData.append('gender', this.registerForm.get('gender')?.value);
-      
+
       formData.append('keycloakId', this.keycloakId || '');
-      
+
       formData.append('name', this.userName || '');
 
       if (this.selectedFile) {
@@ -125,16 +135,16 @@ export class RegisterComponent implements OnInit {
 
       const headers = this.createAuthHeaders();
 
-      this.http.post(`${this.apiUrl}/users/complete-profile`, formData).subscribe({
+      this.http.post(`${this.apiUrl}/users/complete-profile`, formData, { headers }).subscribe({
         next: (response: any) => {
           console.log('Profile completion successful', response);
           this.userService.setUserName(response.name);
           this.userService.setUserAge(response.age);
-          this.userService.setUserPhoto(response.photoPath); 
-          
+          this.userService.setUserPhoto(response.photoPath);
+
           this.isLoading = false;
           this.isRegistered = true;
-      
+
           setTimeout(() => {
             this.isRegistered = false;
             this.router.navigate(['/welcome']);
@@ -160,7 +170,7 @@ export class RegisterComponent implements OnInit {
       reader.readAsDataURL(this.selectedFile);
     }
   }
-  
+
   goBack() {
     this.router.navigate(['']);
   }

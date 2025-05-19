@@ -12,9 +12,14 @@ export const appConfig: ApplicationConfig = {
     provideLottieOptions({
       player: () => import('lottie-web')
     }),
+    {
+      provide:  provideAppInitializer,
+      multi: true,
+      useFactory: () => () => inject(KeycloakService).init()
+    },
     provideCacheableAnimationLoader(),
     provideRouter(routes),
-    provideAnimations(),
+    provideAnimations(), 
     provideHttpClient(   
       withInterceptors([keycloakHttpInterceptor])
   ),

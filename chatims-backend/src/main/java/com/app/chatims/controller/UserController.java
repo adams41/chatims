@@ -1,6 +1,5 @@
 package com.app.chatims.controller;
 
-import com.app.chatims.dto.UserDto;
 import com.app.chatims.entity.UserEntity;
 import com.app.chatims.service.UserService;
 import com.app.chatims.util.Gender;
@@ -51,7 +50,7 @@ public class UserController {
 
     }
 
-    @GetMapping("/by-sub/{sub}")
+    @GetMapping("/keycloak/{sub}")
     public ResponseEntity<UserEntity> getUserByKeycloakId(@PathVariable String sub) {
         UserEntity user = userService.getUserByKeycloakId(sub);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
