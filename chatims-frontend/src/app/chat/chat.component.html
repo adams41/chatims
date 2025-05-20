@@ -2,7 +2,6 @@
   <div class="header">
     <div class="user-info">
       <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="user-photo" />
-      <img *ngIf="!userPhoto" src="/assets/default-avatar.png" alt="Default Avatar" class="user-photo" />
       <div class="user-details">
         <h3>{{ userName || keycloakName || 'Unknown User' }}</h3>
         <p *ngIf="userAge != null">Age: {{ userAge }}</p>

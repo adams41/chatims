@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService {
         logger.debug("Photo saved by path: {}", photoPath);
         Files.copy(photo.getInputStream(), Paths.get(photoPath));
 
-        return "/" + uniqueFileName;
+        return "/uploads/" + uniqueFileName;
     }
 
     private String sanitizeFileName(String fileName) {

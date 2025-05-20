@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers( "/users/register", "/h2-console/**", "/auth/**"
+                        .requestMatchers( "/users/register", "/uploads/**", "/h2-console/**", "/auth/**"
                              ).permitAll()
                         .requestMatchers("/chat").authenticated()
                         .anyRequest().authenticated()

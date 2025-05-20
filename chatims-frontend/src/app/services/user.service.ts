@@ -11,19 +11,19 @@ export class UserService {
   private userName: string | null = null;
   private userAge: number | null = null;
   private userPhoto: string | null = null;
-  
+
   private apiUrl = 'http://localhost:8081';
 
   constructor(private http: HttpClient) {}
- 
+
   getUserData(id: number): Observable<UserEntity> {
     return this.http.get<UserEntity>(`${this.apiUrl}/users/${id}`);
   }
- 
+
   getUserByKeycloakId(keycloakId: string): Observable<UserEntity> {
-    return this.http.get<UserEntity>(`${this.apiUrl}/users/by-sub/${keycloakId}`);
+    return this.http.get<UserEntity>(`${this.apiUrl}/users/keycloak/${keycloakId}`);
   }
- 
+
   setUserName(name: string): void {
     this.userName = name;
   }
@@ -34,8 +34,8 @@ export class UserService {
 
   setUserPhoto(photo: string): void {
     this.userPhoto = photo;
-  } 
-  
+  }
+
   getUserName(): string | null {
     return this.userName;
   }
