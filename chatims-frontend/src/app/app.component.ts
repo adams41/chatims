@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component} from '@angular/core'; 
+import { Component, OnInit} from '@angular/core'; 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
@@ -16,14 +16,21 @@ import { RouterModule } from '@angular/router';
   ],
   styleUrl: './app.component.css'
 })
-export class AppComponent  {
+export class AppComponent implements OnInit {
 
   isDarkMode = false;
 
-  toggleDarkMode() {
-    this.isDarkMode = !this.isDarkMode;
+  ngOnInit(): void {
+    const savedTheme = localStorage.getItem('theme');
+    this.isDarkMode = savedTheme === 'dark';
     document.body.classList.toggle('dark-mode', this.isDarkMode);
   }
- 
+
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+    document.body.classList.toggle('dark-mode', this.isDarkMode);
+
+    localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+  }
 }
 
