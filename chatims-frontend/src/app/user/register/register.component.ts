@@ -9,9 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ProgressBarComponent } from '../../shared/progress-bar/progress-bar/progress-bar.component';
-import { UserService } from '../../services/user.service';
 import { KeycloakService } from '../../utils/keycloak/keycloak.service';
 import { environment } from '../../../environments/environment';
+import { UserService } from '../../services/user/user.service';
 
 @Component({
   selector: 'app-register',

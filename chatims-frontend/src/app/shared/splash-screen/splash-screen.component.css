@@ -1,17 +1,55 @@
+.hero-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100vh;
+  padding: 60px 20px 20px;
+  box-sizing: border-box;
+  text-align: center;
+  gap: 40px;
+}
+
+.lottie-animation {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+}
 
 .start-button {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  background-color: #ffffff;
-  padding: 14px 36px;
+  margin-top: 24px;
+  background: linear-gradient(to right, #eb0f0f, #2513c4);
+  background-size: 200% 100%;
+  background-position: left;
+  color: white;
+
+  padding: 14px 28px;
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: none;
   font-size: 16px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+
+  transition: background-position 0.4s ease, box-shadow 0.3s ease;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.start-button:hover {
+  background-position: right;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(235, 15, 15, 0.4), 0 0 16px rgba(37, 19, 196, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(235, 15, 15, 0.7), 0 0 20px rgba(37, 19, 196, 0.4);
+  }
+}
+
+@media (max-width: 480px) {
+  .start-button {
+    font-size: 14px;
+    padding: 12px 20px;
+  }
 }

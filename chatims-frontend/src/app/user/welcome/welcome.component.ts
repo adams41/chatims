@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../../services/user.service';
 import { Router } from '@angular/router';
 import { KeycloakService } from '../../utils/keycloak/keycloak.service';
 import { CommonModule } from '@angular/common';
+import { UserService } from '../../services/user/user.service';
 
 @Component({
   selector: 'app-welcome',

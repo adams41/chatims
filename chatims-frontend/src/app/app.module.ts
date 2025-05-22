@@ -18,7 +18,6 @@ export function playerFactory() {
   declarations: [
     AppComponent,
     SplashScreenComponent,
-    LottieComponent
   ],
   imports: [
     BrowserModule,

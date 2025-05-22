@@ -27,7 +27,10 @@ export class SplashScreenComponent implements OnInit {
           path: '/assets/animation/animation.json',
           renderer: 'svg',
           loop: true,
-          autoplay: true
+          autoplay: true,
+          rendererSettings: {
+            preserveAspectRatio: 'xMidYMid meet'
+          }
         });
       });
     }}

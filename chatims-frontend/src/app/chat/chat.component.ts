@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { KeycloakService } from '../utils/keycloak/keycloak.service';
-import { UserService } from '../services/user.service';
+import { UserService } from '../services/user/user.service';
 
 @Component({
   selector: 'app-chat',
