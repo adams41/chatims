@@ -20,7 +20,8 @@
       No messages yet. Start chatting!
     </div>
   </div>
-  <div class="input-container">
+<div class="input-container">
+  <div class="input-wrapper">
     <input [(ngModel)]="newMessage" placeholder="Enter message..." class="input-field" (keyup.enter)="sendMessage()" />
     <button (click)="sendMessage()" class="send-button">Send</button>
   </div>
