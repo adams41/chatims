@@ -7,6 +7,9 @@
         <p *ngIf="userAge != null">Age: {{ userAge }}</p>
       </div>
     </div>
+    <div class="chat-timer">
+  Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
+</div>
     <button class="logout-button" (click)="logout()">
       <mat-icon>exit_to_app</mat-icon>
       Logout

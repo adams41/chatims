@@ -22,6 +22,11 @@ export class ChatComponent implements OnInit {
   userPhoto: string | null = null;
   keycloakName: string | null = null;
   keycloakId: string | null = null;
+  timer: any;
+  totalSeconds: number = 5;
+  minutes: number = 0;
+  seconds: number = 5;
+
 
   constructor(
     private userService: UserService,
@@ -31,6 +36,7 @@ export class ChatComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeKeycloak();
+    this.startTimer();
   }
 
   async initializeKeycloak(): Promise<void> {
@@ -83,4 +89,24 @@ export class ChatComponent implements OnInit {
   logout() {
     this.keycloakService.logout();
   }
+
+  startTimer() {
+  this.updateTimeDisplay();
+  this.timer = setInterval(() => {
+    this.totalSeconds--;
+
+    this.updateTimeDisplay();
+
+    if (this.totalSeconds <= 0) {
+      clearInterval(this.timer);
+
+    }
+  }, 1000);
+}
+
+updateTimeDisplay() {
+  this.minutes = Math.floor(this.totalSeconds / 60);
+  this.seconds = this.totalSeconds % 60;
+}
+
 }
