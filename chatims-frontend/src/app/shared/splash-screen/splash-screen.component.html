@@ -1,8 +1,40 @@
 <div class="hero-container">
+
+  <div class="outer-menu">
+    <input class="checkbox-toggle" type="checkbox" id="menu-toggle" />
+    <label class="hamburger" for="menu-toggle">
+      <div></div>
+    </label>
+
+    <div class="menu">
+      <div>
+        <div>
+          <div class="content-container">
+            <h1>About</h1>
+            <p>
+              Chatims is an interactive web chat application that lets users engage in conversations, currently powered by AI-generated responses. Users can personalize their experience by setting preferences, such as selecting a preferred gender for interactions.
+            </p>
+
+            <h1>How It Works</h1>
+            <p>
+              Set your preferences, start a chat, and enjoy conversations.
+            </p>
+
+            <h1>Privacy & Safety</h1>
+            <p>
+              We respect your privacy and ensure safe chatting experiences.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div #lottie class="lottie-animation"></div>
 
   <button mat-fab extended class="start-button" (click)="goToRegister()">
     <mat-icon>chat</mat-icon>
     <span class="start-text">Let’s chat!</span>
   </button>
+
 </div>

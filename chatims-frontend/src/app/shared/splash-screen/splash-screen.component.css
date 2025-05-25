@@ -9,6 +9,8 @@
   box-sizing: border-box;
   text-align: center;
   gap: 40px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 .lottie-animation {
@@ -52,4 +54,141 @@
     font-size: 14px;
     padding: 12px 20px;
   }
+}
+
+.outer-menu {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 9999;
+}
+
+.checkbox-toggle {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  opacity: 0;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.checkbox-toggle:checked + .hamburger > div {
+  transform: rotate(135deg);
+}
+
+.checkbox-toggle:checked + .hamburger > div::before,
+.checkbox-toggle:checked + .hamburger > div::after {
+  top: 0;
+  transform: rotate(90deg);
+}
+
+.checkbox-toggle:checked + .hamburger > div::after {
+  opacity: 0;
+}
+
+.checkbox-toggle:checked ~ .menu {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.checkbox-toggle:checked ~ .menu > div {
+  transform: scale(1);
+}
+
+.checkbox-toggle:checked ~ .menu > div > div {
+  opacity: 1;
+}
+
+.hamburger {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 0 10px 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10000;
+  transition: background-color 0.3s;
+}
+
+.hamburger > div {
+  position: relative;
+  width: 30px;
+  height: 2px;
+  background: #fefefe;
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+.hamburger > div::before,
+.hamburger > div::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: inherit;
+  left: 0;
+  transition: all 0.4s ease;
+}
+
+.hamburger > div::before {
+  top: -10px;
+}
+
+.hamburger > div::after {
+  top: 10px;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu > div {
+  width: 200vw;
+  height: 200vw;
+  background: rgba(11, 11, 11, 0.97);
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+}
+
+.menu > div > div {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  text-align: center;
+}
+
+.content-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: left;
+}
+
+.content-container h1 {
+  color: #fff;
+  margin-top: 40px;
+  font-size: 28px;
+  text-align: center;
+}
+
+.content-container p {
+  color: #fff;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-align: center;
 }
