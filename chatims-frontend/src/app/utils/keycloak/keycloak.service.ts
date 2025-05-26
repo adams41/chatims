@@ -39,9 +39,15 @@ export class KeycloakService {
       throw new Error('Keycloak is not initialized. Call init() first.');
     }
 
+    if (!this._keycloak.authenticated) {
     await this._keycloak.login({
       redirectUri: window.location.origin + '/register'
     });
+
+ } else {
+    console.log('User already authenticated');
+    this.router.navigate(['/welcome']);
+  }
   }
 
   get userId(): string {
