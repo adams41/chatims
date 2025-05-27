@@ -5,7 +5,7 @@
   max-width: 600px;
   height: 60vh;
   max-height: 700px;
-  margin: auto;
+  margin: 80px auto 0 auto;
   background-color: #f5f5f5;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -174,3 +174,18 @@
   :host-context(body.dark-mode) .send-button {
   background-color: #0d47a1;
   }
+
+  .no-photo-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #bbb;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  user-select: none;
+}

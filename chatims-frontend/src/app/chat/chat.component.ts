@@ -6,27 +6,34 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { KeycloakService } from '../utils/keycloak/keycloak.service';
 import { UserService } from '../services/user/user.service';
+import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, NavbarComponent],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
 export class ChatComponent implements OnInit {
   messages: string[] = [];
   newMessage: string = '';
+
   userName: string | null = null;
   userAge: number | null = null;
   userPhoto: string | null = null;
+
   keycloakName: string | null = null;
   keycloakId: string | null = null;
+
+  chatPartnerName = 'Test User';
+  chatPartnerAge = 25;
+  chatPartnerPhoto: string | null = null; 
+
   timer: any;
   totalSeconds: number = 5;
   minutes: number = 0;
   seconds: number = 5;
-
 
   constructor(
     private userService: UserService,
@@ -44,7 +51,6 @@ export class ChatComponent implements OnInit {
       await this.keycloakService.init();
 
       if (this.keycloakService.isTokenValid) {
-
         this.keycloakName = this.keycloakService.fullName;
         this.keycloakId = this.keycloakService.userId;
 
@@ -52,7 +58,6 @@ export class ChatComponent implements OnInit {
           this.loadUserDataByKeycloakId(this.keycloakId);
         }
       } else {
-
         this.router.navigate(['/']);
       }
     } catch (error) {
@@ -63,7 +68,7 @@ export class ChatComponent implements OnInit {
 
   loadUserDataByKeycloakId(keycloakId: string): void {
     this.userService.getUserByKeycloakId(keycloakId).subscribe({
-      next: (user: { name: string | null; age: number | null; photoPath: any; }) => {
+      next: (user: { name: string | null; age: number | null; photoPath: any }) => {
         console.log('User data received:', user);
         this.userName = user.name;
         this.userAge = user.age;
@@ -91,22 +96,19 @@ export class ChatComponent implements OnInit {
   }
 
   startTimer() {
-  this.updateTimeDisplay();
-  this.timer = setInterval(() => {
-    this.totalSeconds--;
-
     this.updateTimeDisplay();
+    this.timer = setInterval(() => {
+      this.totalSeconds--;
+      this.updateTimeDisplay();
 
-    if (this.totalSeconds <= 0) {
-      clearInterval(this.timer);
+      if (this.totalSeconds <= 0) {
+        clearInterval(this.timer);
+      }
+    }, 1000);
+  }
 
-    }
-  }, 1000);
-}
-
-updateTimeDisplay() {
-  this.minutes = Math.floor(this.totalSeconds / 60);
-  this.seconds = this.totalSeconds % 60;
-}
-
+  updateTimeDisplay() {
+    this.minutes = Math.floor(this.totalSeconds / 60);
+    this.seconds = this.totalSeconds % 60;
+  }
 }

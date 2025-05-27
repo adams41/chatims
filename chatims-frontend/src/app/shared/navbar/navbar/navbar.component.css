@@ -1,0 +1,50 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  color: #000;
+  background-color: #fff;
+  z-index: 1000;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+  border: 2px solid #ccc;
+  transition: border-color 0.3s ease;
+}
+
+.nav-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-name,
+.nav-age {
+  transition: color 0.3s ease;
+  color: #000;
+}
+
+:host-context(body.dark-mode) .navbar {
+  background-color: #000000;
+  color: #e0e0e0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+:host-context(body.dark-mode) .nav-photo {
+  border-color: #444;
+}
+
+:host-context(body.dark-mode) .nav-name,
+:host-context(body.dark-mode) .nav-age {
+  color: #e0e0e0;
+}

@@ -1,20 +1,34 @@
+<app-navbar [name]="userName || keycloakName"
+            [age]="userAge"
+            [photo]="userPhoto">
+</app-navbar>
+
 <div class="chat-container">
   <div class="header">
     <div class="user-info">
-      <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="user-photo" />
+      <ng-container *ngIf="chatPartnerPhoto; else noPhoto">
+        <img [src]="chatPartnerPhoto" alt="Chat Partner Photo" class="user-photo" />
+      </ng-container>
+      <ng-template #noPhoto>
+        <div class="no-photo-placeholder">?</div>
+      </ng-template>
+
       <div class="user-details">
-        <h3>{{ userName || keycloakName || 'Unknown User' }}</h3>
-        <p *ngIf="userAge != null">Age: {{ userAge }}</p>
+        <h3>{{ chatPartnerName }}</h3>
+        <p *ngIf="chatPartnerAge != null">Age: {{ chatPartnerAge }}</p>
       </div>
     </div>
+
     <div class="chat-timer">
-  Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
-</div>
+      Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
+    </div>
+
     <button class="logout-button" (click)="logout()">
       <mat-icon>exit_to_app</mat-icon>
       Logout
     </button>
   </div>
+
   <div class="messages">
     <div *ngFor="let message of messages" class="message">
       {{ message }}
@@ -23,9 +37,14 @@
       No messages yet. Start chatting!
     </div>
   </div>
-<div class="input-container">
-  <div class="input-wrapper">
-    <input [(ngModel)]="newMessage" placeholder="Enter message..." class="input-field" (keyup.enter)="sendMessage()" />
-    <button (click)="sendMessage()" class="send-button">Send</button>
+
+  <div class="input-container">
+    <div class="input-wrapper">
+      <input [(ngModel)]="newMessage"
+             placeholder="Enter message..."
+             class="input-field"
+             (keyup.enter)="sendMessage()" />
+      <button (click)="sendMessage()" class="send-button">Send</button>
+    </div>
   </div>
 </div>
