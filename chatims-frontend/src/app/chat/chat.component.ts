@@ -16,7 +16,7 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
   styleUrls: ['./chat.component.css']
 })
 export class ChatComponent implements OnInit {
-  messages: string[] = [];
+  messages: { text: string; time: Date }[] = [];
   newMessage: string = '';
 
   userName: string | null = null;
@@ -84,12 +84,22 @@ export class ChatComponent implements OnInit {
     });
   }
 
-  sendMessage() {
-    if (this.newMessage.trim()) {
-      this.messages.push(this.newMessage);
-      this.newMessage = '';
-    }
+sendMessage() {
+  if (this.newMessage.trim()) {
+    this.messages.push({ text: this.newMessage, time: new Date() });
+    this.newMessage = '';
   }
+}
+
+selectedMessageIndex: number | null = null;
+
+selectMessage(index: number) {
+  if (this.selectedMessageIndex === index) {
+    this.selectedMessageIndex = null;
+  } else {
+    this.selectedMessageIndex = index;
+  }
+}
 
   logout() {
     this.keycloakService.logout();

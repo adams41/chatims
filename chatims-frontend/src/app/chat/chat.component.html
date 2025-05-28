@@ -1,8 +1,9 @@
-<app-navbar [name]="userName || keycloakName"
-            [age]="userAge"
-            [photo]="userPhoto">
-</app-navbar>
-
+<div class="page-wrapper">
+  <app-navbar class="sidebar"
+              [name]="userName || keycloakName"
+              [age]="userAge"
+              [photo]="userPhoto">
+  </app-navbar>
 <div class="chat-container">
   <div class="header">
     <div class="user-info">
@@ -30,9 +31,17 @@
   </div>
 
   <div class="messages">
-    <div *ngFor="let message of messages" class="message">
-      {{ message }}
-    </div>
+<div *ngFor="let message of messages; let i = index" 
+     class="message"
+     (click)="selectMessage(i)"
+     [class.selected]="selectedMessageIndex === i">
+  {{ message.text }}
+
+  <div *ngIf="selectedMessageIndex === i" class="timestamp">
+    {{ message.time | date:'short' }}
+  </div>
+</div>
+
     <div *ngIf="messages.length === 0" class="empty-state">
       No messages yet. Start chatting!
     </div>
@@ -47,4 +56,5 @@
       <button (click)="sendMessage()" class="send-button">Send</button>
     </div>
   </div>
+</div>
 </div>
