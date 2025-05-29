@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,12 +17,20 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, NavbarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    MatIconModule,
+    NavbarComponent
+  ],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
-export class ChatComponent implements OnInit {
-  messages: { text: string; time: Date }[] = [];
+export class ChatComponent implements OnInit, AfterViewChecked {
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+
+  messages: { text: string; from: 'user'; time: Date }[] = [];
   newMessage: string = '';
 
   userName: string | null = null;
@@ -28,7 +42,9 @@ export class ChatComponent implements OnInit {
 
   chatPartnerName = 'Test User';
   chatPartnerAge = 25;
-  chatPartnerPhoto: string | null = null; 
+  chatPartnerPhoto: string | null = null;
+
+  selectedMessageIndex: number | null = null;
 
   timer: any;
   totalSeconds: number = 5;
@@ -46,6 +62,19 @@ export class ChatComponent implements OnInit {
     this.startTimer();
   }
 
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
+  }
+
+  scrollToBottom(): void {
+    try {
+      this.messagesContainer.nativeElement.scrollTop =
+        this.messagesContainer.nativeElement.scrollHeight;
+    } catch (err) {
+      console.error('Scroll error:', err);
+    }
+  }
+
   async initializeKeycloak(): Promise<void> {
     try {
       await this.keycloakService.init();
@@ -61,63 +90,59 @@ export class ChatComponent implements OnInit {
         this.router.navigate(['/']);
       }
     } catch (error) {
-      console.error('Error initializing Keycloak:', error);
+      console.error('Keycloak init error:', error);
       this.router.navigate(['/']);
     }
   }
 
   loadUserDataByKeycloakId(keycloakId: string): void {
     this.userService.getUserByKeycloakId(keycloakId).subscribe({
-      next: (user: { name: string | null; age: number | null; photoPath: any }) => {
-        console.log('User data received:', user);
+      next: (user) => {
         this.userName = user.name;
         this.userAge = user.age;
-
         if (user.photoPath) {
           this.userPhoto = `http://localhost:8081${user.photoPath}`;
         }
       },
-      error: (error: any) => {
-        console.error('Error loading user data by Keycloak ID:', error);
+      error: (error) => {
+        console.error('User load error:', error);
         this.userName = this.keycloakName;
       }
     });
   }
 
-sendMessage() {
-  if (this.newMessage.trim()) {
-    this.messages.push({ text: this.newMessage, time: new Date() });
-    this.newMessage = '';
+  sendMessage(): void {
+    if (this.newMessage.trim()) {
+      this.messages.push({
+        text: this.newMessage,
+        from: 'user',
+        time: new Date()
+      });
+      this.newMessage = '';
+    }
   }
-}
 
-selectedMessageIndex: number | null = null;
-
-selectMessage(index: number) {
-  if (this.selectedMessageIndex === index) {
-    this.selectedMessageIndex = null;
-  } else {
-    this.selectedMessageIndex = index;
+  selectMessage(index: number): void {
+    this.selectedMessageIndex =
+      this.selectedMessageIndex === index ? null : index;
   }
-}
 
-  logout() {
+  logout(): void {
     this.keycloakService.logout();
   }
 
-  startTimer() {
+  startTimer(): void {
     this.updateTimeDisplay();
     this.timer = setInterval(() => {
       this.totalSeconds--;
       this.updateTimeDisplay();
-
       if (this.totalSeconds <= 0) {
         clearInterval(this.timer);
       }
     }, 1000);
   }
 
-  updateTimeDisplay() {
+  updateTimeDisplay(): void {
     this.minutes = Math.floor(this.totalSeconds / 60);
     this.seconds = this.totalSeconds % 60;
   }

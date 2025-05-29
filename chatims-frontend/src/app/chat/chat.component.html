@@ -4,57 +4,58 @@
               [age]="userAge"
               [photo]="userPhoto">
   </app-navbar>
-<div class="chat-container">
-  <div class="header">
-    <div class="user-info">
-      <ng-container *ngIf="chatPartnerPhoto; else noPhoto">
-        <img [src]="chatPartnerPhoto" alt="Chat Partner Photo" class="user-photo" />
-      </ng-container>
-      <ng-template #noPhoto>
-        <div class="no-photo-placeholder">?</div>
-      </ng-template>
 
-      <div class="user-details">
-        <h3>{{ chatPartnerName }}</h3>
-        <p *ngIf="chatPartnerAge != null">Age: {{ chatPartnerAge }}</p>
+  <div class="chat-container">
+    <div class="header">
+      <div class="user-info">
+        <ng-container *ngIf="chatPartnerPhoto; else noPhoto">
+          <img [src]="chatPartnerPhoto" alt="Chat Partner Photo" class="user-photo" />
+        </ng-container>
+        <ng-template #noPhoto>
+          <div class="no-photo-placeholder">?</div>
+        </ng-template>
+
+        <div class="user-details">
+          <h3>{{ chatPartnerName }}</h3>
+          <p *ngIf="chatPartnerAge != null">Age: {{ chatPartnerAge }}</p>
+        </div>
+      </div>
+
+      <div class="chat-timer">
+        Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
+      </div>
+
+      <button class="logout-button" (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+        Logout
+      </button>
+    </div>
+
+    <div class="messages" #messagesContainer>
+      <div *ngFor="let message of messages; let i = index"
+           class="message"
+           (click)="selectMessage(i)"
+           [class.selected]="selectedMessageIndex === i"
+           [class.user-message]="message.from === 'user'">
+        {{ message.text }}
+        <div *ngIf="selectedMessageIndex === i" class="timestamp">
+          {{ message.time | date:'short' }}
+        </div>
+      </div>
+
+      <div *ngIf="messages.length === 0" class="empty-state">
+        No messages yet. Start chatting!
       </div>
     </div>
 
-    <div class="chat-timer">
-      Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
-    </div>
-
-    <button class="logout-button" (click)="logout()">
-      <mat-icon>exit_to_app</mat-icon>
-      Logout
-    </button>
-  </div>
-
-  <div class="messages">
-<div *ngFor="let message of messages; let i = index" 
-     class="message"
-     (click)="selectMessage(i)"
-     [class.selected]="selectedMessageIndex === i">
-  {{ message.text }}
-
-  <div *ngIf="selectedMessageIndex === i" class="timestamp">
-    {{ message.time | date:'short' }}
-  </div>
-</div>
-
-    <div *ngIf="messages.length === 0" class="empty-state">
-      No messages yet. Start chatting!
+    <div class="input-container">
+      <div class="input-wrapper">
+        <input [(ngModel)]="newMessage"
+               placeholder="Enter message..."
+               class="input-field"
+               (keyup.enter)="sendMessage()" />
+        <button (click)="sendMessage()" class="send-button">Send</button>
+      </div>
     </div>
   </div>
-
-  <div class="input-container">
-    <div class="input-wrapper">
-      <input [(ngModel)]="newMessage"
-             placeholder="Enter message..."
-             class="input-field"
-             (keyup.enter)="sendMessage()" />
-      <button (click)="sendMessage()" class="send-button">Send</button>
-    </div>
-  </div>
-</div>
 </div>
