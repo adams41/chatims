@@ -25,7 +25,6 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final KeycloakService keycloakService;
-
     private final UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -35,7 +34,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity registerUser(UserDto userDto) throws IOException {
-
         String photoPath = savePhoto(userDto.getPhoto());
 
         String keycloakId = keycloakService.registerUserInKeycloak(
@@ -52,6 +50,8 @@ public class UserServiceImpl implements UserService {
         user.setPhotoPath(photoPath);
         user.setKeycloakId(keycloakId);
 
+        logger.info("Registered user: {} with Keycloak ID: {}", user.getName(), keycloakId);
+
         return userRepository.save(user);
     }
 
@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
             MultipartFile photo
     ) throws IOException {
         if (userRepository.findByKeycloakId(keycloakId).isPresent()) {
-            throw new RuntimeException("User with this Keycloak ID already exists");
+            throw new IllegalStateException("User profile already completed for Keycloak ID: " + keycloakId);
         }
 
         String photoPath = savePhoto(photo);
@@ -77,6 +77,7 @@ public class UserServiceImpl implements UserService {
         user.setKeycloakId(keycloakId);
 
         logger.debug("Completing profile for Keycloak user: {}", keycloakId);
+
         return userRepository.save(user);
     }
 
