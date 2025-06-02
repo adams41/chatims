@@ -20,7 +20,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/complete-profile")
-    public ResponseEntity<UserEntity> completeProfile(
+    public ResponseEntity<?> completeProfile(
             @RequestParam("keycloakId") String keycloakId,
             @RequestParam("name") String name,
             @RequestParam("age") Integer age,
@@ -28,11 +28,14 @@ public class UserController {
             @RequestParam(value = "photo", required = false) MultipartFile photo
     ) {
         try {
-            UserEntity user = userService.completeUserProfile(keycloakId, name, age, Gender.valueOf(gender), photo);
+            Gender genderEnum = Gender.valueOf(gender.toUpperCase());
+            UserEntity user = userService.completeUserProfile(keycloakId, name, age, genderEnum, photo);
             return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid gender value.");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+                    .body("Error processing uploaded photo.");
         }
     }
 
