@@ -6,6 +6,7 @@ import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.KeycloakService;
 import com.app.chatims.service.UserService;
 import com.app.chatims.util.Gender;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private String uploadDir;
 
     @Override
+    @Transactional
     public UserEntity registerUser(UserDto userDto) throws IOException {
         String photoPath = savePhoto(userDto.getPhoto());
 
@@ -121,6 +123,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity getUserByKeycloakId(String keycloakId) {
-        return userRepository.findByKeycloakId(keycloakId).orElse(null);
+        return userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("User not found by Keycloak ID: " + keycloakId));
     }
 }
