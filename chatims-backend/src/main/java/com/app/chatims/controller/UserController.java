@@ -47,10 +47,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserEntity>> getUsers () {
-        List<UserEntity> users = userService.getUsersForSwipe();
-        return ResponseEntity.ok(users);
-
+    public List<UserEntity> getUsers() {
+        return userService.getUsersForSwipe();
     }
 
     @GetMapping("/keycloak/{sub}")
@@ -58,7 +56,5 @@ public class UserController {
         UserEntity user = userService.getUserByKeycloakId(sub);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
-
-
 
 }
