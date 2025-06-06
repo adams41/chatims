@@ -67,7 +67,7 @@ export class WelcomeComponent implements OnInit {
  
   autoNavigateToChat() {
     setTimeout(() => {
-      this.router.navigate(['/chat']);
+      this.router.navigate(['/chat-preferences']);
     }, 3000);  
   }
 }
