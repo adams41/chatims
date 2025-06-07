@@ -1,6 +1,7 @@
 package com.app.chatims.controller;
 
 import com.app.chatims.entity.UserEntity;
+import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.UserService;
 import com.app.chatims.util.Gender;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("users")
@@ -56,5 +58,14 @@ public class UserController {
         UserEntity user = userService.getUserByKeycloakId(sub);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
-
+    @PutMapping("/{id}/preferences-set")
+    public ResponseEntity<?> updatePreferencesSet(@PathVariable Long id) {
+        boolean updated = userService.setPreferencesFlag(id);
+        if (updated) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
+

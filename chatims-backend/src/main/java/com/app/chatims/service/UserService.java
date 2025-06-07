@@ -26,4 +26,6 @@ public interface UserService {
 
     UserEntity getUserByKeycloakId(String keycloakId);
 
+    boolean setPreferencesFlag(Long id);
+
 }

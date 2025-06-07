@@ -32,4 +32,7 @@ public class UserEntity {
 
     private String photoPath;
 
+    @Column(name = "preferences_set")
+    private boolean preferencesSet;
+
 }

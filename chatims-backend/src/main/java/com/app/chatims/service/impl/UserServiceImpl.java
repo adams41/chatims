@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -125,5 +126,18 @@ public class UserServiceImpl implements UserService {
     public UserEntity getUserByKeycloakId(String keycloakId) {
         return userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("User not found by Keycloak ID: " + keycloakId));
+    }
+
+    @Override
+    public boolean setPreferencesFlag(Long id) {
+        Optional<UserEntity> optionalUser = userRepository.findById(id);
+        if (optionalUser.isPresent()) {
+            UserEntity user = optionalUser.get();
+            user.setPreferencesSet(true);
+            userRepository.save(user);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
