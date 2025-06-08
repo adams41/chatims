@@ -47,9 +47,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   selectedMessageIndex: number | null = null;
 
   timer: any;
-  totalSeconds: number = 5;
-  minutes: number = 0;
-  seconds: number = 5;
+  totalSeconds: number = 300;
+  minutes: number = 5;
+  seconds: number = 0;
 
   constructor(
     private userService: UserService,
