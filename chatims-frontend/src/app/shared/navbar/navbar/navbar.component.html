@@ -1,7 +1,11 @@
-<nav class="navbar">
-  <img *ngIf="photo" [src]="photo" class="nav-photo" />
+<nav class="navbar" (click)="onProfileClick()">
+  <img *ngIf="photo; else noPhoto" [src]="photo" class="nav-photo" alt="User Photo" />
+  <ng-template #noPhoto>
+    <div class="nav-photo-placeholder">?</div>
+  </ng-template>
+
   <div class="nav-info">
     <span class="nav-name">{{ name || 'User' }}</span>
-    <span *ngIf="age" class="nav-age">Age: {{ age }}</span>
+    <span *ngIf="age != null" class="nav-age">Age: {{ age }}</span>
   </div>
 </nav>

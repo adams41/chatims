@@ -2,7 +2,8 @@
   <app-navbar class="sidebar"
               [name]="userName || keycloakName"
               [age]="userAge"
-              [photo]="userPhoto">
+              [photo]="userPhoto"
+              (profileClick)="openProfileModal()">
   </app-navbar>
 
   <div class="chat-container">
@@ -56,6 +57,18 @@
                (keyup.enter)="sendMessage()" />
         <button (click)="sendMessage()" class="send-button">Send</button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isProfileModalOpen" (click)="closeProfileModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="modal-photo" />
+      <h2>{{ userName || keycloakName }}</h2>
+      <p *ngIf="userAge != null">Age: {{ userAge }}</p>
+      <button mat-icon-button (click)="editProfile()">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-button color="warn" (click)="closeProfileModal()">Close</button>
     </div>
   </div>
 </div>
