@@ -65,10 +65,8 @@
       <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="modal-photo" />
       <h2>{{ userName || keycloakName }}</h2>
       <p *ngIf="userAge != null">Age: {{ userAge }}</p>
-      <button mat-icon-button (click)="editProfile()">
-        <mat-icon>edit</mat-icon>
-      </button>
-      <button mat-button color="warn" (click)="closeProfileModal()">Close</button>
+     <button mat-button (click)="editProfile()" class="edit-button">Edit</button>
+     <button mat-button (click)="closeProfileModal()">Cancel</button>
     </div>
   </div>
 </div>

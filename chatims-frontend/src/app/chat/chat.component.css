@@ -86,7 +86,7 @@
   color: #999;
   margin-top: 20px;
   }
-.input-container {
+  .input-container {
   display: flex;
   justify-content: center;
   padding: 15px;
@@ -94,7 +94,7 @@
   border-top: 1px solid #e0e0e0;
 }
 
-.input-wrapper {
+  .input-wrapper {
   display: flex;
   max-width: 600px;
   width: 100%;
@@ -259,11 +259,6 @@
   font-weight: 600;
 }
 
-.modal-content button[mat-icon-button] {
-  background-color: transparent;
-  border: none;
-}
-
 .modal-content button[mat-button] {
   background-color: #f44336;
   color: white;
@@ -298,4 +293,22 @@
 
 :host-context(body.dark-mode) .modal-content button[mat-button]:hover {
   background-color: #b71c1c;
+}
+
+.modal-content button.edit-button[mat-button] {
+  background-color: #2196F3; 
+  color: white;
+}
+
+.modal-content button.edit-button[mat-button]:hover {
+  background-color: #1976D2; 
+}
+
+:host-context(body.dark-mode) .modal-content button.edit-button[mat-button] {
+  background-color: #1976D2;
+  color: #fff;
+}
+
+:host-context(body.dark-mode) .modal-content button.edit-button[mat-button]:hover {
+  background-color: #0d47a1;
 }
