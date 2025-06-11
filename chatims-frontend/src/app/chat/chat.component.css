@@ -11,41 +11,48 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
-  .header {
+
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px;
   background-color: #ffffff;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  .user-info {
+}
+
+.user-info {
   display: flex;
   align-items: center;
-  }
-  .user-photo {
+}
+
+.user-photo {
   width: 50px;
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
   margin-right: 15px;
   border: 2px solid #e0e0e0;
-  }
-  .user-details h3 {
+}
+
+.user-details h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  }
-  .user-details p {
+}
+
+.user-details p {
   margin: 5px 0 0;
   font-size: 14px;
   color: #666;
-  }
-  .app-controls {
+}
+
+.app-controls {
   display: flex;
   align-items: center;
-  }
-  .logout-button {
+}
+
+.logout-button {
   display: flex;
   align-items: center;
   padding: 8px 16px;
@@ -57,21 +64,26 @@
   font-size: 14px;
   transition: background-color 0.3s;
   margin-left: 10px;
-  }
-  .logout-button:hover {
+}
+
+.logout-button:hover {
   background-color: #d32f2f;
-  }
-  .logout-button mat-icon {
+}
+
+.logout-button mat-icon {
   margin-right: 5px;
-  }
-  .messages {
+}
+
+.messages {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  }
-  .message {
+  background-color: #f5f5f5;
+}
+
+.message {
   max-width: 70%;
   padding: 10px 15px;
   margin-bottom: 10px;
@@ -80,13 +92,15 @@
   border-radius: 18px;
   align-self: flex-end;
   word-break: break-word;
-  }
-  .empty-state {
+}
+
+.empty-state {
   text-align: center;
   color: #999;
   margin-top: 20px;
-  }
-  .input-container {
+}
+
+.input-container {
   display: flex;
   justify-content: center;
   padding: 15px;
@@ -94,7 +108,7 @@
   border-top: 1px solid #e0e0e0;
 }
 
-  .input-wrapper {
+.input-wrapper {
   display: flex;
   max-width: 600px;
   width: 100%;
@@ -107,11 +121,11 @@
   border-radius: 24px;
   font-size: 16px;
   margin-right: 10px;
-  background-color: inherit;
-  color: inherit;
   min-width: 0;
+  color: #000;
 }
-  .send-button {
+
+.send-button {
   padding: 12px 20px;
   background-color: #2196F3;
   color: white;
@@ -121,58 +135,71 @@
   font-size: 16px;
   font-weight: 500;
   transition: background-color 0.3s;
-  }
-  .send-button:hover {
+}
+
+.send-button:hover {
   background-color: #1976D2;
-  }
-  :host-context(body.dark-mode) .chat-container {
+}
+
+:host-context(body.dark-mode) .chat-container {
   background-color: #121212;
   color: #e0e0e0;
-  }
-  :host-context(body.dark-mode) .header {
+}
+
+:host-context(body.dark-mode) .header {
   background-color: #1e1e1e;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  }
-  :host-context(body.dark-mode) .user-photo {
+}
+
+:host-context(body.dark-mode) .user-photo {
   border-color: #444;
-  }
-  :host-context(body.dark-mode) .user-details h3 {
+}
+
+:host-context(body.dark-mode) .user-details h3 {
   color: #ffffff;
-  }
-  :host-context(body.dark-mode) .user-details p {
+}
+
+:host-context(body.dark-mode) .user-details p {
   color: #b0b0b0;
-  }
-  :host-context(body.dark-mode) .messages {
+}
+
+:host-context(body.dark-mode) .messages {
   background-color: #121212;
-  }
-  :host-context(body.dark-mode) .message {
+}
+
+:host-context(body.dark-mode) .message {
   background-color: #0d47a1;
   color: #ffffff;
-  }
-  :host-context(body.dark-mode) .empty-state {
+}
+
+:host-context(body.dark-mode) .empty-state {
   color: #777;
-  }
-  :host-context(body.dark-mode) .input-container {
+}
+
+:host-context(body.dark-mode) .input-container {
   background-color: #1e1e1e;
   border-top: 1px solid #333;
-  }
-  :host-context(body.dark-mode) .input-field {
+}
+
+:host-context(body.dark-mode) .input-field {
   border-color: #444;
   color: #ffffff;
   background-color: #2d2d2d;
-  }
-  :host-context(body.dark-mode) .input-field::placeholder {
-  color: #aaa;
-  }
-  :host-context(body.dark-mode) .send-button {
-  background-color: #0d47a1;
-  }
+}
 
-  * {
+:host-context(body.dark-mode) .input-field::placeholder {
+  color: #aaa;
+}
+
+:host-context(body.dark-mode) .send-button {
+  background-color: #0d47a1;
+}
+
+* {
   transition: background-color 0.3s, color 0.3s, box-shadow 0.3s, border-color 0.3s;
 }
 
-  .no-photo-placeholder {
+.no-photo-placeholder {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -189,8 +216,10 @@
 
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
@@ -268,6 +297,15 @@
   background-color: #d32f2f;
 }
 
+.modal-content button.edit-button[mat-button] {
+  background-color: #2196F3;
+  color: white;
+}
+
+.modal-content button.edit-button[mat-button]:hover {
+  background-color: #1976D2;
+}
+
 :host-context(body.dark-mode) .modal-overlay {
   background-color: rgba(0, 0, 0, 0.8);
 }
@@ -293,15 +331,6 @@
 
 :host-context(body.dark-mode) .modal-content button[mat-button]:hover {
   background-color: #b71c1c;
-}
-
-.modal-content button.edit-button[mat-button] {
-  background-color: #2196F3; 
-  color: white;
-}
-
-.modal-content button.edit-button[mat-button]:hover {
-  background-color: #1976D2; 
 }
 
 :host-context(body.dark-mode) .modal-content button.edit-button[mat-button] {
