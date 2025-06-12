@@ -63,7 +63,7 @@
   <div class="modal-overlay" *ngIf="isProfileModalOpen" (click)="closeProfileModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="modal-photo" />
-      <h2>{{ userName || keycloakName }}</h2>
+      <p> Name: {{ userName || keycloakName }}</p>
       <p *ngIf="userAge != null">Age: {{ userAge }}</p>
      <button mat-button (click)="editProfile()" class="edit-button">Edit</button>
      <button mat-button (click)="closeProfileModal()">Cancel</button>
