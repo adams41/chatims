@@ -20,24 +20,24 @@
     transition: width 0.5s;
   }
 
-  .options button {
-  background-color: #f0f0f0;
-  border: 2px solid #888;
+ .options button {
+  background-color: #000000;
+  border: 2px solid #ffffff;
   border-radius: 8px;
   padding: 12px 24px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
-  color: #333;
+  color: white;
   margin: 8px 0;
   width: 100%;
   text-align: left;
+  transition: background-color 0.8s ease, border-color 0.8s ease, transform 0.2s ease;
 }
 
 .options button:hover {
-  background-color: #4caf50;
-  color: white;
-  border-color: #4caf50;
+  background-color: #2513c4;
+  border-color: #2513c4;
   transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 4px 12px rgba(37, 19, 196, 0.4);
 }
+
