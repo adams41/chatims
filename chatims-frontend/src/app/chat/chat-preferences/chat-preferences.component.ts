@@ -5,9 +5,10 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-chat-preferences',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './chat-preferences.component.html',
-  styleUrl: './chat-preferences.component.css',
+  styleUrls: ['./chat-preferences.component.css'],
   animations: [
     trigger('slideAnimation', [
       transition(':enter', [
@@ -22,53 +23,50 @@ import { Router } from '@angular/router';
 })
 export class ChatPreferencesComponent {
   questions = [
-    
-      {
-        text: 'What age range are you looking for in a chat partner?',
-        options: ['18-25', '25-35', '35-45', 'Doesn’t matter']
-      },
-      {
-        text: 'What gender should your chat partner be?',
-        options: ['Male', 'Female', 'Doesn’t matter']
-      },
-      {
-        text: 'What are you looking for?',
-        options: ['Friendship', 'Flirting', 'Serious conversation']
-      }
-    
-    
+    {
+      text: 'What age range are you looking for in a chat partner?',
+      options: ['18-25', '25-35', '35-45', 'Doesn’t matter']
+    },
+    {
+      text: 'What gender should your chat partner be?',
+      options: ['Male', 'Female', 'Doesn’t matter']
+    },
+    {
+      text: 'What are you looking for?',
+      options: ['Friendship', 'Flirting', 'Serious conversation']
+    }
   ];
-  
+
   currentQuestionIndex = 0;
-  currentQuestion = this.questions[this.currentQuestionIndex];
-  
-  preferences: any = {};
-  progress = 0;
+  preferences: Record<string, string> = {};
 
   constructor(private router: Router) {}
 
-  nextQuestion() {
+  get currentQuestion() {
+    return this.questions[this.currentQuestionIndex];
+  }
+
+  get progress(): number {
+    return Math.round((this.currentQuestionIndex / this.questions.length) * 100);
+  }
+
+  selectOption(option: string): void {
+    const questionText = this.currentQuestion.text;
+    this.preferences[questionText] = option;
+    this.nextQuestion();
+  }
+
+  nextQuestion(): void {
     setTimeout(() => {
       this.currentQuestionIndex++;
-      if (this.currentQuestionIndex < this.questions.length) {
-        this.currentQuestion = this.questions[this.currentQuestionIndex];
-      } else {
-        this.startChatSearch(); 
+      if (this.currentQuestionIndex >= this.questions.length) {
         console.log('User answers:', this.preferences);
+        this.startChatSearch();
       }
     }, 400);
   }
-  
-  selectOption(option: string) {
-    const currentQuestionText = this.currentQuestion?.text ?? '';
-    this.preferences[currentQuestionText] = option;
-    this.nextQuestion();
+
+  private startChatSearch(): void {
+    this.router.navigate(['/chat']);
   }
- 
-  startChatSearch() {
-        this.router.navigate(['/chat']); 
-      }
-  
-  
 }
- 
