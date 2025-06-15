@@ -47,6 +47,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   selectedMessageIndex: number | null = null;
 
   isProfileModalOpen: boolean = false;
+  isEditingProfile: boolean = false;
 
   timer: any;
   totalSeconds: number = 300;
@@ -149,15 +150,27 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.seconds = this.totalSeconds % 60;
   }
 
-openProfileModal(): void {
-  this.isProfileModalOpen = true;
-}
+  openProfileModal(): void {
+    this.isProfileModalOpen = true;
+    this.isEditingProfile = false;
+  }
 
-closeProfileModal(): void {
-  this.isProfileModalOpen = false;
-}
+  closeProfileModal(): void {
+    this.isProfileModalOpen = false;
+    this.isEditingProfile = false;
+  }
 
-editProfile(): void {
-  console.log('Edit profile clicked');
-}
+  editProfile(): void {
+    this.isEditingProfile = true;
+  }
+
+  saveProfile(): void {
+    console.log('Profile saved:', this.userName, this.userAge);
+    this.isEditingProfile = false;
+    this.isProfileModalOpen = false;
+  }
+
+  cancelEdit(): void {
+    this.isEditingProfile = false;
+  }
 }

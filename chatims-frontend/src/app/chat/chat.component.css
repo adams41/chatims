@@ -258,6 +258,15 @@
   }
 }
 
+.modal-content input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+}
+
 .modal-photo {
   width: 100px;
   height: 100px;
