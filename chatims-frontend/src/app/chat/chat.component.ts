@@ -22,15 +22,15 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
     FormsModule,
     MatButtonModule,
     MatIconModule,
-    NavbarComponent
+    NavbarComponent,
   ],
   templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.css']
+  styleUrls: ['./chat.component.css'],
 })
 export class ChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
-  messages: { text: string; from: 'user'; time: Date }[] = [];
+  messages: { text: string; from: 'user' | 'partner'; time: Date }[] = [];
   newMessage: string = '';
 
   userName: string | null = null;
@@ -110,18 +110,27 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       error: (error) => {
         console.error('User load error:', error);
         this.userName = this.keycloakName;
-      }
+      },
     });
   }
 
   sendMessage(): void {
     if (this.newMessage.trim()) {
-      this.messages.push({
+      const userMessage = {
         text: this.newMessage,
-        from: 'user',
-        time: new Date()
-      });
+        from: 'user' as const,
+        time: new Date(),
+      };
+      this.messages.push(userMessage);
       this.newMessage = '';
+
+      setTimeout(() => {
+        this.messages.push({
+          text: `Auto-reply: "${userMessage.text}"`,
+          from: 'partner' as const,
+          time: new Date(),
+        });
+      }, 1000);
     }
   }
 
