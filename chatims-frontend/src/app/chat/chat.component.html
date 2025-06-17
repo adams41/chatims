@@ -60,7 +60,12 @@
                placeholder="Enter message..."
                class="input-field"
                (keyup.enter)="sendMessage()" />
-        <button (click)="sendMessage()" class="send-button">Send</button>
+               <button 
+               (click)="sendMessage()" 
+               [disabled]="!newMessage.trim()" 
+               class="send-button">
+               Send
+             </button>
       </div>
     </div>
   </div>
