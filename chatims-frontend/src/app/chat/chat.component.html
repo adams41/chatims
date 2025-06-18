@@ -56,16 +56,19 @@
 
     <div class="input-container">
       <div class="input-wrapper">
-        <input [(ngModel)]="newMessage"
-               placeholder="Enter message..."
-               class="input-field"
-               (keyup.enter)="sendMessage()" />
-               <button 
-               (click)="sendMessage()" 
-               [disabled]="!newMessage.trim()" 
-               class="send-button">
-               Send
-             </button>
+        <textarea
+          [(ngModel)]="newMessage"
+          placeholder="Enter message..."
+          class="input-field"
+          (keydown)="handleKeyDown($event)"
+          rows="1">
+        </textarea>
+        <button 
+          (click)="sendMessage()" 
+          [disabled]="!newMessage.trim()" 
+          class="send-button">
+          Send
+        </button>
       </div>
     </div>
   </div>
