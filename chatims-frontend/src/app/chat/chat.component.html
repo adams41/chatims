@@ -41,11 +41,18 @@
         'user-message': message.from === 'user',
         'partner-message': message.from === 'partner'
       }">
+ 
    {{ message.text }}
-   <div *ngIf="selectedMessageIndex === i" class="timestamp">
+ 
+   <div class="timestamp" *ngIf="selectedMessageIndex === i">
      {{ message.time | date:'short' }}
+     <ng-container *ngIf="message.from === 'user'">
+       <span *ngIf="isMessageRead(i)" class="read-receipt">✓✓</span>
+     </ng-container>
    </div>
  </div>
+ 
+ 
  
 
 

@@ -30,7 +30,14 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
 export class ChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
-  messages: { text: string; from: 'user' | 'partner'; time: Date }[] = [];
+  messages: {
+    text: string;
+    from: 'user' | 'partner';
+    time: Date;
+    read?: boolean;
+    sent?: boolean;
+  }[] = [];
+
   newMessage: string = '';
 
   userName: string | null = null;
@@ -67,6 +74,15 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   ngAfterViewChecked(): void {
     this.scrollToBottom();
+    this.markUnreadPartnerMessagesAsRead();
+  }
+
+  markUnreadPartnerMessagesAsRead(): void {
+    this.messages.forEach((msg) => {
+      if (msg.from === 'partner' && !msg.read) {
+        msg.read = true;
+      }
+    });
   }
 
   scrollToBottom(): void {
@@ -76,6 +92,15 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     } catch (err) {
       console.error('Scroll error:', err);
     }
+  }
+
+  isMessageRead(index: number): boolean {
+    const message = this.messages[index];
+    return (
+      message.from === 'user' &&
+      !!message.sent && // Ensures it's treated as a boolean
+      this.messages.some((m) => m.from === 'partner' && m.time > message.time)
+    );
   }
 
   async initializeKeycloak(): Promise<void> {
@@ -120,13 +145,14 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       this.sendMessage();
     }
   }
-  
+
   sendMessage(): void {
     if (this.newMessage.trim()) {
       const userMessage = {
         text: this.newMessage,
         from: 'user' as const,
         time: new Date(),
+        sent: true,
       };
       this.messages.push(userMessage);
       this.newMessage = '';
