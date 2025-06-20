@@ -383,3 +383,16 @@
   font-size: 0.75rem;
   color: #4caf50;
 }
+
+.typing-indicator {
+  font-style: italic;
+  color: gray;
+  padding: 8px 12px;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+

@@ -61,6 +61,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   minutes: number = 5;
   seconds: number = 0;
 
+  partnerTyping = false;
+  private typingTimeout: any;
+
   constructor(
     private userService: UserService,
     private keycloakService: KeycloakService,
@@ -98,7 +101,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     const message = this.messages[index];
     return (
       message.from === 'user' &&
-      !!message.sent && // Ensures it's treated as a boolean
+      !!message.sent &&
       this.messages.some((m) => m.from === 'partner' && m.time > message.time)
     );
   }
@@ -157,13 +160,18 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       this.messages.push(userMessage);
       this.newMessage = '';
 
-      setTimeout(() => {
+      this.partnerTyping = true;
+      clearTimeout(this.typingTimeout);
+
+      this.typingTimeout = setTimeout(() => {
+        this.partnerTyping = false;
+
         this.messages.push({
           text: `Auto-reply: "${userMessage.text}"`,
           from: 'partner' as const,
           time: new Date(),
         });
-      }, 1000);
+      }, 2000);
     }
   }
 

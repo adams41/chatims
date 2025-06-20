@@ -34,27 +34,26 @@
 
     <div class="messages" #messagesContainer>
       <div *ngFor="let message of messages; let i = index"
-      class="message"
-      (click)="selectMessage(i)"
-      [class.selected]="selectedMessageIndex === i"
-      [ngClass]="{
-        'user-message': message.from === 'user',
-        'partner-message': message.from === 'partner'
-      }">
- 
-   {{ message.text }}
- 
-   <div class="timestamp" *ngIf="selectedMessageIndex === i">
-     {{ message.time | date:'short' }}
-     <ng-container *ngIf="message.from === 'user'">
-       <span *ngIf="isMessageRead(i)" class="read-receipt">✓✓</span>
-     </ng-container>
-   </div>
- </div>
- 
- 
- 
+           class="message"
+           (click)="selectMessage(i)"
+           [class.selected]="selectedMessageIndex === i"
+           [ngClass]="{
+             'user-message': message.from === 'user',
+             'partner-message': message.from === 'partner'
+           }">
+        {{ message.text }}
 
+        <div class="timestamp" *ngIf="selectedMessageIndex === i">
+          {{ message.time | date:'short' }}
+          <ng-container *ngIf="message.from === 'user'">
+            <span *ngIf="isMessageRead(i)" class="read-receipt">✓✓</span>
+          </ng-container>
+        </div>
+      </div>
+
+      <div *ngIf="partnerTyping" class="typing-indicator">
+        {{ chatPartnerName }} is typing...
+      </div>
 
       <div *ngIf="messages.length === 0" class="empty-state">
         No messages yet. Start chatting!
@@ -80,33 +79,33 @@
     </div>
   </div>
 
-<div class="modal-overlay" *ngIf="isProfileModalOpen" (click)="closeProfileModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <ng-container *ngIf="!isEditingProfile; else editForm">
-      <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="modal-photo" />
-      <p>Name: {{ userName || keycloakName }}</p>
-      <p *ngIf="userAge != null">Age: {{ userAge }}</p>
-      <button mat-button (click)="editProfile()" class="edit-button">Edit</button>
-      <button mat-button (click)="closeProfileModal()">Cancel</button>
-    </ng-container>
+  <div class="modal-overlay" *ngIf="isProfileModalOpen" (click)="closeProfileModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <ng-container *ngIf="!isEditingProfile; else editForm">
+        <img *ngIf="userPhoto" [src]="userPhoto" alt="User Photo" class="modal-photo" />
+        <p>Name: {{ userName || keycloakName }}</p>
+        <p *ngIf="userAge != null">Age: {{ userAge }}</p>
+        <button mat-button (click)="editProfile()" class="edit-button">Edit</button>
+        <button mat-button (click)="closeProfileModal()">Cancel</button>
+      </ng-container>
 
-    <ng-template #editForm>
-      <h2>Edit Profile</h2>
-      <form (ngSubmit)="saveProfile()" #profileForm="ngForm">
-        <div style="margin-bottom: 15px;">
-          <label for="name">Name:</label>
-          <input id="name" name="name" [(ngModel)]="userName" required />
-        </div>
+      <ng-template #editForm>
+        <h2>Edit Profile</h2>
+        <form (ngSubmit)="saveProfile()" #profileForm="ngForm">
+          <div style="margin-bottom: 15px;">
+            <label for="name">Name:</label>
+            <input id="name" name="name" [(ngModel)]="userName" required />
+          </div>
 
-        <div style="margin-bottom: 15px;">
-          <label for="age">Age:</label>
-          <input id="age" name="age" type="number" [(ngModel)]="userAge" required />
-        </div>
+          <div style="margin-bottom: 15px;">
+            <label for="age">Age:</label>
+            <input id="age" name="age" type="number" [(ngModel)]="userAge" required />
+          </div>
 
-        <button mat-button type="submit" class="edit-button">Save</button>
-        <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
-      </form>
-    </ng-template>
+          <button mat-button type="submit" class="edit-button">Save</button>
+          <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
+        </form>
+      </ng-template>
+    </div>
   </div>
 </div>
-
