@@ -378,3 +378,26 @@
 :host-context(body.dark-mode) .modal-content button.edit-button[mat-button]:hover {
   background-color: #0d47a1;
 }
+
+.quick-replies {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-replies button {
+  border: none;
+  background-color: #bbb;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.quick-replies button:hover {
+  background-color: #2513c4;
+}
+

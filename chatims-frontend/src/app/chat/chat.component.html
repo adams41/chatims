@@ -42,19 +42,26 @@
              'partner-message': message.from === 'partner'
            }">
         {{ message.text }}
-
+    
         <div class="timestamp" *ngIf="selectedMessageIndex === i">
           {{ message.time | date:'short' }}
           <ng-container *ngIf="message.from === 'user'">
             <span *ngIf="isMessageRead(i)" class="read-receipt">✓✓</span>
           </ng-container>
         </div>
+    
+        <div class="quick-replies"
+             *ngIf="i === messages.length - 1 && message.from === 'partner'">
+          <button (click)="sendQuickReply('Yes!')">Yes!</button>
+          <button (click)="sendQuickReply('No')">No</button>
+          <button (click)="sendQuickReply('Maybe')">Maybe</button>
+        </div>
       </div>
-
+    
       <div *ngIf="partnerTyping" class="typing-indicator">
         {{ chatPartnerName }} is typing...
       </div>
-
+    
       <div *ngIf="messages.length === 0" class="empty-state">
         No messages yet. Start chatting!
       </div>

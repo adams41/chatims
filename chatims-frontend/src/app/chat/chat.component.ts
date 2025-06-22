@@ -106,6 +106,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     );
   }
 
+  sendQuickReply(text: string): void {
+    this.newMessage = text;
+    this.sendMessage();
+  }
+
   async initializeKeycloak(): Promise<void> {
     try {
       await this.keycloakService.init();
