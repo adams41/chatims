@@ -42,7 +42,6 @@
              'partner-message': message.from === 'partner'
            }">
         {{ message.text }}
-    
         <div class="timestamp" *ngIf="selectedMessageIndex === i">
           {{ message.time | date:'short' }}
           <ng-container *ngIf="message.from === 'user'">
@@ -68,14 +67,20 @@
     </div>
 
     <div class="input-container">
-      <div class="input-wrapper">
+      <div class="input-wrapper" style="position: relative;">
         <textarea
           [(ngModel)]="newMessage"
           placeholder="Enter message..."
           class="input-field"
           (keydown)="handleKeyDown($event)"
-          rows="1">
+          rows="1"
+          maxlength="200">
         </textarea>
+    
+        <div class="char-counter" [class.warning]="newMessage.length >= 180">
+          {{ newMessage.length }} / 200
+        </div>
+    
         <button 
           (click)="sendMessage()" 
           [disabled]="!newMessage.trim()" 
@@ -84,7 +89,6 @@
         </button>
       </div>
     </div>
-  </div>
 
   <div class="modal-overlay" *ngIf="isProfileModalOpen" (click)="closeProfileModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
