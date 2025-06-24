@@ -6,89 +6,96 @@
               (profileClick)="openProfileModal()">
   </app-navbar>
 
-  <div class="chat-container">
-    <div class="header">
-      <div class="user-info">
-        <ng-container *ngIf="chatPartnerPhoto; else noPhoto">
-          <img [src]="chatPartnerPhoto" alt="Chat Partner Photo" class="user-photo" />
-        </ng-container>
-        <ng-template #noPhoto>
-          <div class="no-photo-placeholder">?</div>
-        </ng-template>
-
-        <div class="user-details">
-          <h3>{{ chatPartnerName }}</h3>
-          <p *ngIf="chatPartnerAge != null">Age: {{ chatPartnerAge }}</p>
-        </div>
-      </div>
-
-      <div class="chat-timer">
-        Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
-      </div>
-
-      <button class="logout-button" (click)="logout()">
-        <mat-icon>exit_to_app</mat-icon>
-        Logout
-      </button>
-    </div>
-
-    <div class="messages" #messagesContainer>
-      <div *ngFor="let message of messages; let i = index"
-           class="message"
-           (click)="selectMessage(i)"
-           [class.selected]="selectedMessageIndex === i"
-           [ngClass]="{
-             'user-message': message.from === 'user',
-             'partner-message': message.from === 'partner'
-           }">
-        {{ message.text }}
-        <div class="timestamp" *ngIf="selectedMessageIndex === i">
-          {{ message.time | date:'short' }}
-          <ng-container *ngIf="message.from === 'user'">
-            <span *ngIf="isMessageRead(i)" class="read-receipt">✓✓</span>
+  <div class="chat-wrapper" style="position: relative; display: flex; justify-content: center;">
+    <div class="chat-container" [class.slide-out-right]="isSlidingOutRight">
+      <div class="header">
+        <div class="user-info">
+          <ng-container *ngIf="chatPartnerPhoto; else noPhoto">
+            <img [src]="chatPartnerPhoto" alt="Chat Partner Photo" class="user-photo" />
           </ng-container>
-        </div>
-    
-        <div class="quick-replies"
-             *ngIf="i === messages.length - 1 && message.from === 'partner'">
-          <button (click)="sendQuickReply('Yes!')">Yes!</button>
-          <button (click)="sendQuickReply('No')">No</button>
-          <button (click)="sendQuickReply('Maybe')">Maybe</button>
-        </div>
-      </div>
-    
-      <div *ngIf="partnerTyping" class="typing-indicator">
-        {{ chatPartnerName }} is typing...
-      </div>
-    
-      <div *ngIf="messages.length === 0" class="empty-state">
-        No messages yet. Start chatting!
-      </div>
-    </div>
+          <ng-template #noPhoto>
+            <div class="no-photo-placeholder">?</div>
+          </ng-template>
 
-    <div class="input-container">
-      <div class="input-wrapper" style="position: relative;">
-        <textarea
-          [(ngModel)]="newMessage"
-          placeholder="Enter message..."
-          class="input-field"
-          (keydown)="handleKeyDown($event)"
-          rows="1"
-          maxlength="200">
-        </textarea>
-    
-        <div class="char-counter" [class.warning]="newMessage.length >= 180">
-          {{ newMessage.length }} / 200
+          <div class="user-details">
+            <h3>{{ chatPartnerName }}</h3>
+            <p *ngIf="chatPartnerAge != null">Age: {{ chatPartnerAge }}</p>
+          </div>
         </div>
-    
-        <button 
-          (click)="sendMessage()" 
-          [disabled]="!newMessage.trim()" 
-          class="send-button">
-          Send
+
+        <div class="chat-timer">
+          Time left: {{ minutes }}:{{ seconds | number:'2.0' }}
+        </div>
+
+        <button class="logout-button" (click)="logout()">
+          <mat-icon>exit_to_app</mat-icon>
+          Logout
         </button>
       </div>
+
+      <div class="messages" #messagesContainer>
+        <div *ngFor="let message of messages; let i = index"
+             class="message"
+             (click)="selectMessage(i)"
+             [class.selected]="selectedMessageIndex === i"
+             [ngClass]="{
+               'user-message': message.from === 'user',
+               'partner-message': message.from === 'partner'
+             }">
+          {{ message.text }}
+          <div class="timestamp" *ngIf="selectedMessageIndex === i">
+            {{ message.time | date:'short' }}
+            <ng-container *ngIf="message.from === 'user'">
+              <span *ngIf="isMessageRead(i)" class="read-receipt">✓✓</span>
+            </ng-container>
+          </div>
+
+          <div class="quick-replies"
+               *ngIf="i === messages.length - 1 && message.from === 'partner'">
+            <button (click)="sendQuickReply('Yes!')">Yes!</button>
+            <button (click)="sendQuickReply('No')">No</button>
+            <button (click)="sendQuickReply('Maybe')">Maybe</button>
+          </div>
+        </div>
+
+        <div *ngIf="partnerTyping" class="typing-indicator">
+          {{ chatPartnerName }} is typing...
+        </div>
+
+        <div *ngIf="messages.length === 0" class="empty-state">
+          No messages yet. Start chatting!
+        </div>
+      </div>
+
+      <div class="input-container">
+        <div class="input-wrapper" style="position: relative;">
+          <textarea
+            [(ngModel)]="newMessage"
+            placeholder="Enter message..."
+            class="input-field"
+            (keydown)="handleKeyDown($event)"
+            rows="1"
+            maxlength="200">
+          </textarea>
+
+          <div class="char-counter" [class.warning]="newMessage.length >= 180">
+            {{ newMessage.length }} / 200
+          </div>
+
+          <button 
+            (click)="sendMessage()" 
+            [disabled]="!newMessage.trim()" 
+            class="send-button">
+            Send
+          </button>
+        </div>
+      </div>
     </div>
+
+    <button class="new-chat-button" (click)="startNewChat()" aria-label="Start new chat">
+      ➔
+    </button>
+  </div>
 
   <div class="modal-overlay" *ngIf="isProfileModalOpen" (click)="closeProfileModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
@@ -117,6 +124,14 @@
           <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
         </form>
       </ng-template>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isConfirmOpen" (click)="confirmNo()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <p>Are you sure you want to change chat partner?</p>
+      <button mat-button (click)="confirmYes()">Yes</button>
+      <button mat-button (click)="confirmNo()">No</button>
     </div>
   </div>
 </div>

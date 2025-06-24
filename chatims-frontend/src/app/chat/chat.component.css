@@ -414,3 +414,104 @@
   color: #d32f2f;
   font-weight: bold;
 }
+
+.chat-wrapper {
+  position: relative;
+  width: fit-content;
+  margin: 80px auto 0 auto;
+}
+
+.new-chat-button {
+  position: fixed;  
+  right: 70px;  
+  top: 55%;  
+  transform: translateY(-50%);
+  background-color: #2513c4;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 80px;  
+  height: 80px;
+  font-size: 48px;  
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: background-color 0.3s, transform 0.2s;
+  z-index: 9999;
+}
+
+.new-chat-button:hover {
+  background-color: #eb0f0f;
+  transform: translateY(-50%) scale(1.1);  
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+}
+
+.slide-out-right {
+  animation: slideOutRight 0.5s ease forwards;
+}
+ 
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-content button {
+  margin: 10px 8px 0 8px;
+}
+
+.slide-out {
+  transform: translateX(100vw);
+  opacity: 0;
+}
+
+.slide-in {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-content button {
+  margin: 10px 8px 0 8px;
+}
+

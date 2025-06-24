@@ -3,7 +3,7 @@ import {
   Component,
   ElementRef,
   OnInit,
-  ViewChild
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -227,5 +227,46 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   cancelEdit(): void {
     this.isEditingProfile = false;
+  }
+
+  isConfirmOpen = false;
+  confirmCallback: (() => void) | null = null;
+
+  openConfirm(callback: () => void) {
+    this.isConfirmOpen = true;
+    this.confirmCallback = callback;
+  }
+
+  confirmYes() {
+    this.isConfirmOpen = false;
+    if (this.confirmCallback) {
+      this.confirmCallback();
+    }
+  }
+
+  confirmNo() {
+    this.isConfirmOpen = false;
+    this.confirmCallback = null;
+  }
+
+  isSlidingOutRight = false;
+
+  startNewChat() {
+    this.openConfirm(() => {
+    
+      this.isSlidingOutRight = true;
+
+      setTimeout(() => {
+        this.messages = [];
+        this.chatPartnerName = '';
+        this.chatPartnerPhoto = null;
+        this.chatPartnerAge = 25;
+        this.newMessage = '';
+        this.minutes = 5;
+        this.seconds = 0;
+
+        this.isSlidingOutRight = false;
+      }, 500);  
+    });
   }
 }
