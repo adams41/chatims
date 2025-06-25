@@ -110,16 +110,31 @@
       <ng-template #editForm>
         <h2>Edit Profile</h2>
         <form (ngSubmit)="saveProfile()" #profileForm="ngForm">
-          <div style="margin-bottom: 15px;">
-            <label for="name">Name:</label>
-            <input id="name" name="name" [(ngModel)]="userName" required />
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+              <label for="name">Name:</label>
+              <input 
+                id="name" 
+                name="name" 
+                [(ngModel)]="userName" 
+                required 
+                style="width: 250px; padding: 8px; text-align: center;"
+              />
+            </div>
+          
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+              <label for="age">Age:</label>
+              <input 
+                id="age" 
+                name="age" 
+                type="number" 
+                [(ngModel)]="userAge" 
+                required 
+                style="width: 250px; padding: 8px; text-align: center;"
+              />
+            </div>
           </div>
-
-          <div style="margin-bottom: 15px;">
-            <label for="age">Age:</label>
-            <input id="age" name="age" type="number" [(ngModel)]="userAge" required />
-          </div>
-
+          
           <button mat-button type="submit" class="edit-button">Save</button>
           <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
         </form>
