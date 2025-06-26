@@ -2,6 +2,7 @@ import {
   AfterViewChecked,
   Component,
   ElementRef,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -27,7 +28,14 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
 })
-export class ChatComponent implements OnInit, AfterViewChecked {
+export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
+  ngOnDestroy(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+    clearTimeout(this.typingTimeout);
+  }
+
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   messages: {
