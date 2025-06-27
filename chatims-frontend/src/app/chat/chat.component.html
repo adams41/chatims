@@ -19,7 +19,9 @@
 
           <div class="user-details">
             <h3>{{ chatPartnerName }}</h3>
-            <p *ngIf="chatPartnerAge != null">Age: {{ chatPartnerAge }}</p>
+            <ng-container *ngIf="chatPartnerAge != null">
+              <p>Age: {{ chatPartnerAge }}</p>
+            </ng-container>
           </div>
         </div>
 
