@@ -261,20 +261,22 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   startNewChat() {
     this.openConfirm(() => {
-    
       this.isSlidingOutRight = true;
 
       setTimeout(() => {
-        this.messages = [];
-        this.chatPartnerName = '';
-        this.chatPartnerPhoto = null;
-        this.chatPartnerAge = 25;
-        this.newMessage = '';
-        this.minutes = 5;
-        this.seconds = 0;
-
+        this.resetChatState();
         this.isSlidingOutRight = false;
-      }, 500);  
+      }, 500);
     });
+  }
+
+  private resetChatState(): void {
+    this.messages = [];
+    this.chatPartnerName = '';
+    this.chatPartnerPhoto = null;
+    this.chatPartnerAge = 25;
+    this.newMessage = '';
+    this.totalSeconds = 300;
+    this.updateTimeDisplay();
   }
 }
