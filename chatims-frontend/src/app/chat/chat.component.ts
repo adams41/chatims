@@ -38,6 +38,21 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
+  // User info
+  userName: string | null = null;
+  userAge: number | null = null;
+  userPhoto: string | null = null;
+
+  // Keycloak info
+  keycloakName: string | null = null;
+  keycloakId: string | null = null;
+
+  // Chat partner
+  chatPartnerName = 'Test User';
+  chatPartnerAge = 25;
+  chatPartnerPhoto: string | null = null;
+
+  // Chat messages
   messages: {
     text: string;
     from: 'user' | 'partner';
@@ -47,30 +62,26 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }[] = [];
 
   newMessage: string = '';
-
-  userName: string | null = null;
-  userAge: number | null = null;
-  userPhoto: string | null = null;
-
-  keycloakName: string | null = null;
-  keycloakId: string | null = null;
-
-  chatPartnerName = 'Test User';
-  chatPartnerAge = 25;
-  chatPartnerPhoto: string | null = null;
-
   selectedMessageIndex: number | null = null;
 
-  isProfileModalOpen: boolean = false;
-  isEditingProfile: boolean = false;
-
+  // Timer
   timer: any;
   totalSeconds: number = 300;
   minutes: number = 5;
   seconds: number = 0;
 
+  // Typing indicator
   partnerTyping = false;
   private typingTimeout: any;
+
+  // Modals
+  isProfileModalOpen: boolean = false;
+  isEditingProfile: boolean = false;
+  isConfirmOpen = false;
+  confirmCallback: (() => void) | null = null;
+
+  // Animation state
+  isSlidingOutRight = false;
 
   constructor(
     private userService: UserService,
@@ -237,9 +248,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.isEditingProfile = false;
   }
 
-  isConfirmOpen = false;
-  confirmCallback: (() => void) | null = null;
-
   openConfirm(callback: () => void) {
     this.isConfirmOpen = true;
     this.confirmCallback = callback;
@@ -256,8 +264,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.isConfirmOpen = false;
     this.confirmCallback = null;
   }
-
-  isSlidingOutRight = false;
 
   startNewChat() {
     this.openConfirm(() => {
