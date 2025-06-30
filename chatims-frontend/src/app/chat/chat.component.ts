@@ -33,7 +33,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (this.timer) {
       clearInterval(this.timer);
     }
-    clearTimeout(this.typingTimeout);
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
   }
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
@@ -99,7 +101,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.markUnreadPartnerMessagesAsRead();
   }
 
-  markUnreadPartnerMessagesAsRead(): void {
+  private markUnreadPartnerMessagesAsRead(): void {
     this.messages.forEach((msg) => {
       if (msg.from === 'partner' && !msg.read) {
         msg.read = true;
@@ -107,10 +109,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  scrollToBottom(): void {
+  private scrollToBottom(): void {
     try {
-      this.messagesContainer.nativeElement.scrollTop =
-        this.messagesContainer.nativeElement.scrollHeight;
+      const container = this.messagesContainer.nativeElement;
+      container.scrollTop = container.scrollHeight;
     } catch (err) {
       console.error('Scroll error:', err);
     }
@@ -174,29 +176,31 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   sendMessage(): void {
-    if (this.newMessage.trim()) {
-      const userMessage = {
-        text: this.newMessage,
-        from: 'user' as const,
-        time: new Date(),
-        sent: true,
-      };
-      this.messages.push(userMessage);
-      this.newMessage = '';
+    if (!this.newMessage.trim()) return;
 
-      this.partnerTyping = true;
+    const userMessage = {
+      text: this.newMessage,
+      from: 'user' as const,
+      time: new Date(),
+      sent: true,
+    };
+    this.messages.push(userMessage);
+    this.newMessage = '';
+
+    this.partnerTyping = true;
+    if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
-
-      this.typingTimeout = setTimeout(() => {
-        this.partnerTyping = false;
-
-        this.messages.push({
-          text: `Auto-reply: "${userMessage.text}"`,
-          from: 'partner' as const,
-          time: new Date(),
-        });
-      }, 2000);
     }
+
+    this.typingTimeout = setTimeout(() => {
+      this.partnerTyping = false;
+
+      this.messages.push({
+        text: `Auto-reply: "${userMessage.text}"`,
+        from: 'partner' as const,
+        time: new Date(),
+      });
+    }, 2000);
   }
 
   selectMessage(index: number): void {
