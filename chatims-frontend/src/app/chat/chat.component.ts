@@ -187,6 +187,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.messages.push(userMessage);
     this.newMessage = '';
 
+    this.triggerPartnerReply(userMessage.text);
+  }
+
+  private triggerPartnerReply(text: string): void {
     this.partnerTyping = true;
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
@@ -196,7 +200,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.partnerTyping = false;
 
       this.messages.push({
-        text: `Auto-reply: "${userMessage.text}"`,
+        text: `Auto-reply: "${text}"`,
         from: 'partner' as const,
         time: new Date(),
       });
