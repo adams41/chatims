@@ -157,15 +157,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       next: (user) => {
         this.userName = user.name;
         this.userAge = user.age;
-        if (user.photoPath) {
-          this.userPhoto = `http://localhost:8081${user.photoPath}`;
-        }
+        this.userPhoto = this.getUserPhotoUrl(user.photoPath);
       },
       error: (error) => {
         console.error('User load error:', error);
         this.userName = this.keycloakName;
       },
     });
+  }
+
+  private getUserPhotoUrl(photoPath: string | null): string | null {
+    return photoPath ? `http://localhost:8081${photoPath}` : null;
   }
 
   handleKeyDown(event: KeyboardEvent): void {
