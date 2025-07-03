@@ -40,6 +40,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
+  private readonly AUTO_REPLY_DELAY = 2000;
+
   // User info
   userName: string | null = null;
   userAge: number | null = null;
@@ -206,7 +208,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         from: 'partner' as const,
         time: new Date(),
       });
-    }, 2000);
+    }, this.AUTO_REPLY_DELAY);
   }
 
   selectMessage(index: number): void {
