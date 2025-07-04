@@ -9,65 +9,71 @@ import { UserService } from '../../services/user/user.service';
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.css',
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule],
 })
 export class WelcomeComponent implements OnInit {
   userName: string = '';
   isLoading: boolean = true;
-  
-  constructor(private userService: UserService,
+
+  constructor(
+    private userService: UserService,
     private router: Router,
-    private keycloakService: KeycloakService,) {}
-    
+    private keycloakService: KeycloakService
+  ) {}
+
   ngOnInit(): void {
     this.loadUserInfo();
   }
-    
+
   async loadUserInfo() {
-    try { 
+    try {
       await this.keycloakService.init();
-      
-      if (this.keycloakService.isTokenValid) { 
-        const keycloakName = this.keycloakService.fullName;
-        
-        if (keycloakName) {
-          this.userName = keycloakName;
-          this.userService.setUserName(keycloakName);
-          this.isLoading = false;
-          this.autoNavigateToChat();
-        } else { 
-          const keycloakId = this.keycloakService.userId;
-          if (keycloakId) {
-            this.userService.getUserByKeycloakId(keycloakId).subscribe({
-              next: (user) => {
-                this.userName = user.name;
-                this.isLoading = false;
-                this.autoNavigateToChat();
-              },
-              error: (error) => {
-                console.error('Error fetching user data:', error);
-                this.isLoading = false;
-              
-              }
-            });
-          } else {
-            this.isLoading = false;
-          }
-        }
-      } else {
-         
+
+      if (!this.keycloakService.isTokenValid) {
         this.router.navigate(['/']);
+        return;
       }
-    } catch (error) {
-      console.error('Error loading user info:', error);
+
+      const keycloakId = this.keycloakService.userId;
+
+      if (!keycloakId) {
+        this.isLoading = false;
+        this.router.navigate(['/']);
+        return;
+      }
+
+      this.userService.getUserByKeycloakId(keycloakId).subscribe({
+        next: (user) => {
+          this.userService.setUserId(user.id);
+          this.isLoading = false;
+
+          const hasName = user && user.name && user.name.trim();
+
+          if (hasName) {
+            this.userName = user.name;
+            this.userService.setUserName(user.name);
+          }
+
+          if (hasName && user.preferencesSet) {
+            this.autoNavigate('/chat');
+          } else {
+            this.autoNavigate('/chat-preferences');
+          }
+        },
+        error: () => {
+          this.isLoading = false;
+          this.autoNavigate('/chat-preferences');
+        },
+      });
+    } catch {
       this.isLoading = false;
       this.router.navigate(['/']);
     }
   }
- 
-  autoNavigateToChat() {
+
+  autoNavigate(path: string, delayMs: number = 3000): void {
     setTimeout(() => {
-      this.router.navigate(['/chat-preferences']);
-    }, 3000);  
+      this.router.navigate([path]);
+    }, delayMs);
   }
 }
