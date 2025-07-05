@@ -265,15 +265,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.confirmCallback = callback;
   }
 
-  confirmYes() {
+  handleConfirm(result: boolean): void {
     this.isConfirmOpen = false;
-    if (this.confirmCallback) {
+    if (result && this.confirmCallback) {
       this.confirmCallback();
     }
-  }
-
-  confirmNo() {
-    this.isConfirmOpen = false;
     this.confirmCallback = null;
   }
 

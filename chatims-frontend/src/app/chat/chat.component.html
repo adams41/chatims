@@ -144,11 +144,11 @@
     </div>
   </div>
 
-  <div class="modal-overlay" *ngIf="isConfirmOpen" (click)="confirmNo()">
+  <div class="modal-overlay" *ngIf="isConfirmOpen" (click)="handleConfirm(false)">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <p>Are you sure you want to change chat partner?</p>
-      <button mat-button (click)="confirmYes()">Yes</button>
-      <button mat-button (click)="confirmNo()">No</button>
+      <button mat-button (click)="handleConfirm(true)">Yes</button>
+      <button mat-button (click)="handleConfirm(false)">No</button>
     </div>
   </div>
 </div>
