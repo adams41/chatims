@@ -24,9 +24,9 @@ import { UserService } from '../../services/user/user.service';
     MatSelectModule,
     MatButtonModule,
     CommonModule,
-    ProgressBarComponent
+    ProgressBarComponent,
   ],
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent implements OnInit {
   @Output() back = new EventEmitter<void>();
@@ -52,51 +52,54 @@ export class RegisterComponent implements OnInit {
   ) {
     this.registerForm = this.fb.group({
       age: ['', [Validators.required, Validators.min(18)]],
-      gender: ['', Validators.required]
+      gender: ['', Validators.required],
     });
   }
 
   async ngOnInit(): Promise<void> {
     try {
       await this.keycloakService.init();
-
-      if (this.keycloakService.isTokenValid) {
-        this.isKeycloakUser = true;
-        this.keycloakId = this.keycloakService.userId;
-        this.userName = this.keycloakService.fullName;
-
-        this.checkExistingUser();
-      } else {
-        this.redirectToKeycloakAuth();
-      }
+      this.handleKeycloakUser();
     } catch (error) {
       console.error('[RegisterComponent] Keycloak init failed', error);
     }
   }
 
-  checkExistingUser(): void {
+  private handleKeycloakUser(): void {
+    if (this.keycloakService.isTokenValid) {
+      this.isKeycloakUser = true;
+      this.keycloakId = this.keycloakService.userId;
+      this.userName = this.keycloakService.fullName;
+      this.fetchExistingUser();
+    } else {
+      this.redirectToKeycloakAuth();
+    }
+  }
+
+  private fetchExistingUser(): void {
     if (!this.keycloakId) return;
 
     this.isLoading = true;
-
     const headers = this.createAuthHeaders();
 
-    this.http.get(`${this.apiUrl}/users/keycloak/${this.keycloakId}`, { headers }).subscribe({
-      next: (user: any) => {
-
-        this.userService.setUserName(user.name);
-        this.userService.setUserAge(user.age);
-        this.userService.setUserPhoto(user.photoPath);
-
-        this.isLoading = false;
-        this.router.navigate(['/welcome']);
-      },
-      error: (error) => {
-        console.log('User not found in database, needs to complete profile', error);
-
-        this.isLoading = false;
-      }
-    });
+    this.http
+      .get(`${this.apiUrl}/users/keycloak/${this.keycloakId}`, { headers })
+      .subscribe({
+        next: (user: any) => {
+          this.userService.setUserName(user.name);
+          this.userService.setUserAge(user.age);
+          this.userService.setUserPhoto(user.photoPath);
+          this.isLoading = false;
+          this.router.navigate(['/welcome']);
+        },
+        error: (error) => {
+          console.log(
+            'User not found in database, needs to complete profile',
+            error
+          );
+          this.isLoading = false;
+        },
+      });
   }
 
   private createAuthHeaders(): HttpHeaders {
@@ -106,36 +109,33 @@ export class RegisterComponent implements OnInit {
       this.redirectToKeycloakAuth();
       return new HttpHeaders();
     }
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
 
-  redirectToKeycloakAuth(): void {
-
+  private redirectToKeycloakAuth(): void {
     this.keycloakService.login();
   }
 
-  onSubmit() {
-    if (this.registerForm.valid) {
-      this.isLoading = true;
+  onSubmit(): void {
+    if (!this.registerForm.valid) return;
 
-      const formData = new FormData();
+    this.isLoading = true;
 
-      formData.append('age', this.registerForm.get('age')?.value);
-      formData.append('gender', this.registerForm.get('gender')?.value);
+    const formData = new FormData();
+    formData.append('age', this.registerForm.get('age')?.value);
+    formData.append('gender', this.registerForm.get('gender')?.value);
+    formData.append('keycloakId', this.keycloakId || '');
+    formData.append('name', this.userName || '');
 
-      formData.append('keycloakId', this.keycloakId || '');
+    if (this.selectedFile) {
+      formData.append('photo', this.selectedFile, this.selectedFile.name);
+    }
 
-      formData.append('name', this.userName || '');
+    const headers = this.createAuthHeaders();
 
-      if (this.selectedFile) {
-        formData.append('photo', this.selectedFile, this.selectedFile.name);
-      }
-
-      const headers = this.createAuthHeaders();
-
-      this.http.post(`${this.apiUrl}/users/complete-profile`, formData, { headers }).subscribe({
+    this.http
+      .post(`${this.apiUrl}/users/complete-profile`, formData, { headers })
+      .subscribe({
         next: (response: any) => {
           console.log('Profile completion successful', response);
           this.userService.setUserName(response.name);
@@ -153,25 +153,24 @@ export class RegisterComponent implements OnInit {
         error: (error) => {
           console.error('Profile completion failed', error);
           this.isLoading = false;
-        }
+        },
       });
-    }
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.selectedFile = input.files[0];
+    const file = input.files?.[0];
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.previewUrl = reader.result as string;
-      };
-      reader.readAsDataURL(this.selectedFile);
-    }
+    this.selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewUrl = reader.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 
-  goBack() {
+  goBack(): void {
     this.router.navigate(['']);
   }
 }
