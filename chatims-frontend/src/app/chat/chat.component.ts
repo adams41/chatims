@@ -29,34 +29,20 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
   styleUrls: ['./chat.component.css'],
 })
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
-  ngOnDestroy(): void {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
-    }
-  }
-
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
-  private readonly AUTO_REPLY_DELAY = 2000;
-
-  // User info
   userName: string | null = null;
   userAge: number | null = null;
   userPhoto: string | null = null;
 
-  // Keycloak info
   keycloakName: string | null = null;
   keycloakId: string | null = null;
 
-  // Chat partner
   chatPartnerName = 'Test User';
   chatPartnerAge = 25;
   chatPartnerPhoto: string | null = null;
+  private matchSound = new Audio('assets/sound/match-sound.mp3');
 
-  // Chat messages
   messages: {
     text: string;
     from: 'user' | 'partner';
@@ -64,28 +50,23 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     read?: boolean;
     sent?: boolean;
   }[] = [];
-
   newMessage: string = '';
   selectedMessageIndex: number | null = null;
 
-  // Timer
-  timer: any;
-  totalSeconds: number = 300;
-  minutes: number = 5;
-  seconds: number = 0;
+  showMatchScreen = false;
+  isSlidingOutRight = false;
+  isProfileModalOpen = false;
+  isEditingProfile = false;
+  isConfirmOpen = false;
 
-  // Typing indicator
+  timer: any;
+  totalSeconds = 300;
+  minutes = 5;
+  seconds = 0;
+
   partnerTyping = false;
   private typingTimeout: any;
-
-  // Modals
-  isProfileModalOpen: boolean = false;
-  isEditingProfile: boolean = false;
-  isConfirmOpen = false;
-  confirmCallback: (() => void) | null = null;
-
-  // Animation state
-  isSlidingOutRight = false;
+  private confirmCallback: (() => void) | null = null;
 
   constructor(
     private userService: UserService,
@@ -103,11 +84,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.markUnreadPartnerMessagesAsRead();
   }
 
+  ngOnDestroy(): void {
+    if (this.timer) clearInterval(this.timer);
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
+  }
+
   private markUnreadPartnerMessagesAsRead(): void {
     this.messages.forEach((msg) => {
-      if (msg.from === 'partner' && !msg.read) {
-        msg.read = true;
-      }
+      if (msg.from === 'partner' && !msg.read) msg.read = true;
     });
   }
 
@@ -137,14 +121,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   async initializeKeycloak(): Promise<void> {
     try {
       await this.keycloakService.init();
-
       if (this.keycloakService.isTokenValid) {
         this.keycloakName = this.keycloakService.fullName;
         this.keycloakId = this.keycloakService.userId;
-
-        if (this.keycloakId) {
-          this.loadUserDataByKeycloakId(this.keycloakId);
-        }
+        if (this.keycloakId) this.loadUserDataByKeycloakId(this.keycloakId);
       } else {
         this.router.navigate(['/']);
       }
@@ -190,25 +170,29 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     };
     this.messages.push(userMessage);
     this.newMessage = '';
-
     this.triggerPartnerReply(userMessage.text);
   }
 
   private triggerPartnerReply(text: string): void {
     this.partnerTyping = true;
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
-    }
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
 
     this.typingTimeout = setTimeout(() => {
       this.partnerTyping = false;
-
       this.messages.push({
         text: `Auto-reply: "${text}"`,
-        from: 'partner' as const,
+        from: 'partner',
         time: new Date(),
       });
-    }, this.AUTO_REPLY_DELAY);
+
+      if (text.toLowerCase().includes('yes')) {
+        this.showMatchScreen = true;
+
+        this.matchSound
+          .play()
+          .catch((err) => console.error('Sound error:', err));
+      }
+    }, 2000);
   }
 
   selectMessage(index: number): void {
@@ -225,9 +209,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.timer = setInterval(() => {
       this.totalSeconds--;
       this.updateTimeDisplay();
-      if (this.totalSeconds <= 0) {
-        clearInterval(this.timer);
-      }
+      if (this.totalSeconds <= 0) clearInterval(this.timer);
     }, 1000);
   }
 
@@ -251,7 +233,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   saveProfile(): void {
-    console.log('Profile saved:', this.userName, this.userAge);
     this.isEditingProfile = false;
     this.isProfileModalOpen = false;
   }
@@ -260,28 +241,38 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.isEditingProfile = false;
   }
 
-  openConfirm(callback: () => void) {
+  openConfirm(callback: () => void): void {
     this.isConfirmOpen = true;
     this.confirmCallback = callback;
   }
 
   handleConfirm(result: boolean): void {
     this.isConfirmOpen = false;
-    if (result && this.confirmCallback) {
-      this.confirmCallback();
-    }
+    if (result && this.confirmCallback) this.confirmCallback();
     this.confirmCallback = null;
   }
 
-  startNewChat() {
+  startNewChat(): void {
     this.openConfirm(() => {
       this.isSlidingOutRight = true;
-
       setTimeout(() => {
         this.resetChatState();
         this.isSlidingOutRight = false;
       }, 500);
     });
+  }
+
+  closeMatchAndStartNewChat(): void {
+    this.showMatchScreen = false;
+    this.startNewChatWithoutConfirm();
+  }
+
+  startNewChatWithoutConfirm(): void {
+    this.isSlidingOutRight = true;
+    setTimeout(() => {
+      this.resetChatState();
+      this.isSlidingOutRight = false;
+    }, 500);
   }
 
   private resetChatState(): void {
@@ -292,5 +283,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.newMessage = '';
     this.totalSeconds = 300;
     this.updateTimeDisplay();
+    this.showMatchScreen = false;
   }
 }

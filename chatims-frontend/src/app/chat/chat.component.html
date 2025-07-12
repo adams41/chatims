@@ -84,9 +84,9 @@
             {{ newMessage.length }} / 200
           </div>
 
-          <button 
-            (click)="sendMessage()" 
-            [disabled]="!newMessage.trim()" 
+          <button
+            (click)="sendMessage()"
+            [disabled]="!newMessage.trim()"
             class="send-button">
             Send
           </button>
@@ -115,28 +115,28 @@
           <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 20px;">
             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
               <label for="name">Name:</label>
-              <input 
-                id="name" 
-                name="name" 
-                [(ngModel)]="userName" 
-                required 
+              <input
+                id="name"
+                name="name"
+                [(ngModel)]="userName"
+                required
                 style="width: 250px; padding: 8px; text-align: center;"
               />
             </div>
-          
+
             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
               <label for="age">Age:</label>
-              <input 
-                id="age" 
-                name="age" 
-                type="number" 
-                [(ngModel)]="userAge" 
-                required 
+              <input
+                id="age"
+                name="age"
+                type="number"
+                [(ngModel)]="userAge"
+                required
                 style="width: 250px; padding: 8px; text-align: center;"
               />
             </div>
           </div>
-          
+
           <button mat-button type="submit" class="edit-button">Save</button>
           <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
         </form>
@@ -149,6 +149,29 @@
       <p>Are you sure you want to change chat partner?</p>
       <button mat-button (click)="handleConfirm(true)">Yes</button>
       <button mat-button (click)="handleConfirm(false)">No</button>
+    </div>
+  </div>
+  <div class="match-overlay" *ngIf="showMatchScreen">
+    <div class="match-popup">
+      <img [src]="userPhoto" class="match-avatar left" alt="Your photo" />
+
+      <ng-container *ngIf="chatPartnerPhoto; else placeholder">
+        <img [src]="chatPartnerPhoto" class="match-avatar right" alt="Partner photo" />
+      </ng-container>
+      <ng-template #placeholder>
+        <div
+          class="match-avatar right placeholder-avatar"
+          title="Partner photo not available"
+        >
+          ?
+        </div>
+      </ng-template>
+      <h2 class="match-text">🎉 It's a Match! 🎉</h2>
+
+      <div class="match-actions">
+        <button mat-button color="primary" (click)="openProfileModal()">See Profile</button>
+        <button mat-button color="accent" (click)="closeMatchAndStartNewChat()">Start New Chat</button>
+      </div>
     </div>
   </div>
 </div>
