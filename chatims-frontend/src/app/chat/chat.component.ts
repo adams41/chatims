@@ -285,4 +285,31 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.updateTimeDisplay();
     this.showMatchScreen = false;
   }
+
+  triggerHeartExplosion(): void {
+    const container = document.querySelector('.heart-screen-explosion');
+    if (!container) return;
+
+    const hearts = container.querySelectorAll('.heart');
+    hearts.forEach((heart) => {
+      const x = (Math.random() - 0.5) * 1000;
+      const y = (Math.random() - 0.5) * 1000;
+      const scale = 0.5 + Math.random();
+
+      (
+        heart as HTMLElement
+      ).style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+      (heart as HTMLElement).style.opacity = '0';
+      (heart as HTMLElement).style.transition =
+        'transform 1.2s ease-out, opacity 1.2s';
+    });
+
+    setTimeout(() => {
+      hearts.forEach((heart) => {
+        (heart as HTMLElement).style.transform = '';
+        (heart as HTMLElement).style.opacity = '';
+        (heart as HTMLElement).style.transition = '';
+      });
+    }, 1500);
+  }
 }
