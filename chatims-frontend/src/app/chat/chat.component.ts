@@ -12,8 +12,9 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { KeycloakService } from '../utils/keycloak/keycloak.service';
-import { UserService } from '../services/user/user.service';
 import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
+import { UserService } from '../services/user.service';
+import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-chat',
@@ -30,6 +31,8 @@ import { NavbarComponent } from '../shared/navbar/navbar/navbar.component';
 })
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+  @ViewChild('confettiCanvas', { static: false }) confettiCanvas!: ElementRef<HTMLCanvasElement>;
+
 
   userName: string | null = null;
   userAge: number | null = null;
@@ -185,13 +188,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         time: new Date(),
       });
 
-      if (text.toLowerCase().includes('yes')) {
-        this.showMatchScreen = true;
+    if (text.toLowerCase().includes('yes')) {
+  this.showMatchScreen = true;
+  this.launchConfetti();
 
-        this.matchSound
-          .play()
-          .catch((err) => console.error('Sound error:', err));
-      }
+  this.matchSound
+    .play()
+    .catch((err) => console.error('Sound error:', err));
+}
     }, 2000);
   }
 
@@ -199,6 +203,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.selectedMessageIndex =
       this.selectedMessageIndex === index ? null : index;
   }
+
+  launchConfetti(): void {
+  const myConfetti = confetti.create(this.confettiCanvas.nativeElement, {
+    resize: true,
+    useWorker: true,
+  });
+
+  myConfetti({
+    particleCount: 150,
+    spread: 100,
+    origin: { y: 0.6 },
+  });
+}
 
   logout(): void {
     this.keycloakService.logout();
