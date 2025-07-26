@@ -167,9 +167,6 @@
         </div>
       </ng-template>
       <h2 class="match-text">🎉 It's a Match! 🎉</h2>
-      <div class="heart-explosion">
-        <span *ngFor="let h of [].constructor(20); let i = index" class="heart" [style.--i]="i">❤️</span>
-      </div>
       <div class="match-actions">
         <button mat-button color="primary" (click)="openProfileModal()">See Profile</button>
         <button mat-button color="accent" (click)="closeMatchAndStartNewChat()">Start New Chat</button>

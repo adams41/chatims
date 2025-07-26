@@ -591,23 +591,6 @@
   justify-content: center;
 }
 
-.heart-explosion {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 1000;
-}
-
-.heart {
-  position: absolute;
-  font-size: 24px;
-  opacity: 0;
-  animation: explode 1s ease-out forwards;
-  animation-delay: calc(var(--i) * 0.1s);
-}
-
 @keyframes explode {
   0% {
     transform: translate(0, 0) scale(1);
