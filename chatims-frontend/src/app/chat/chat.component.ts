@@ -172,6 +172,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       sent: true,
     };
     this.messages.push(userMessage);
+    this.playSound('send');
     this.newMessage = '';
     this.triggerPartnerReply(userMessage.text);
   }
@@ -187,6 +188,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         from: 'partner',
         time: new Date(),
       });
+      this.playSound('receive'); 
 
     if (text.toLowerCase().includes('yes')) {
   this.showMatchScreen = true;
@@ -203,6 +205,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.selectedMessageIndex =
       this.selectedMessageIndex === index ? null : index;
   }
+
+  private playSound(type: 'send' | 'receive') {
+  const audio = new Audio(`assets/sound/send-message.mp3`);
+  audio.volume = 0.3; 
+  audio.play().catch(() => {});
+}
 
   launchConfetti(): void {
   const myConfetti = confetti.create(this.confettiCanvas.nativeElement, {
