@@ -5,7 +5,9 @@
               [photo]="userPhoto"
               (profileClick)="openProfileModal()">
   </app-navbar>
-
+<div class="welcome-banner" *ngIf="showWelcomeMessage">
+  You’re now chatting with someone new!
+</div>
   <div class="chat-wrapper" style="position: relative; display: flex; justify-content: center;">
     <div class="chat-container" [class.slide-out-right]="isSlidingOutRight">
       <div class="header">

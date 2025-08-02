@@ -61,6 +61,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   isProfileModalOpen = false;
   isEditingProfile = false;
   isConfirmOpen = false;
+  showWelcomeMessage = false;
 
   timer: any;
   totalSeconds = 300;
@@ -280,10 +281,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   startNewChat(): void {
     this.openConfirm(() => {
       this.isSlidingOutRight = true;
+      this.showWelcomeMessage = true;
       setTimeout(() => {
         this.resetChatState();
         this.isSlidingOutRight = false;
-      }, 500);
+        this.showWelcomeMessage = false;
+      }, 2000);
     });
   }
 

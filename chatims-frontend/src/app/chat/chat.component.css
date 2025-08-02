@@ -12,6 +12,57 @@
   overflow: hidden;
 }
 
+.welcome-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  padding: 16px 28px;
+  font-size: 17px;
+  font-weight: 600;
+  border-radius: 16px;
+  text-align: center;
+  z-index: 1000;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  border: 1px solid transparent;
+  animation: bannerCenterIn 0.4s ease-out, bannerCenterOut 0.4s ease-in 2.8s forwards;
+  transition: background 0.3s, color 0.3s, border 0.3s;
+}
+
+body.dark-theme .welcome-banner {
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+body:not(.dark-theme) .welcome-banner {
+  background: rgba(255, 255, 255, 0.95);
+  color: #2e7d32;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes bannerCenterIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes bannerCenterOut {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(0.9);
+  }
+}
+
+
 .header {
   display: flex;
   justify-content: space-between;
