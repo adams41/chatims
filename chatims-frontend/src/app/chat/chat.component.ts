@@ -41,6 +41,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   keycloakName: string | null = null;
   keycloakId: string | null = null;
 
+  starterPromptTimeout: any;
+  showStarterPrompt = false;
+
   chatPartnerName = 'Test User';
   chatPartnerAge = 25;
   chatPartnerPhoto: string | null = null;
@@ -175,6 +178,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.messages.push(userMessage);
     this.playSound('send');
     this.newMessage = '';
+    this.showStarterPrompt = false;
+    clearTimeout(this.starterPromptTimeout);
     this.triggerPartnerReply(userMessage.text);
   }
 
@@ -189,7 +194,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         from: 'partner',
         time: new Date(),
       });
-      this.playSound('receive'); 
+      this.playSound('receive');
 
     if (text.toLowerCase().includes('yes')) {
   this.showMatchScreen = true;
@@ -209,7 +214,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   private playSound(type: 'send' | 'receive') {
   const audio = new Audio(`assets/sound/send-message.mp3`);
-  audio.volume = 0.3; 
+  audio.volume = 0.3;
   audio.play().catch(() => {});
 }
 
@@ -312,7 +317,15 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.totalSeconds = 300;
     this.updateTimeDisplay();
     this.showMatchScreen = false;
+
+    this.showStarterPrompt = false;
+    clearTimeout(this.starterPromptTimeout);
+    this.starterPromptTimeout = setTimeout(() => {
+    if (this.messages.length === 0) {
+      this.showStarterPrompt = true;
+    }
+  }, 30000);
   }
 
- 
+
 }

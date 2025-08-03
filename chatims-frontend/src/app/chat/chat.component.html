@@ -69,6 +69,10 @@
         <div *ngIf="messages.length === 0" class="empty-state">
           No messages yet. Start chatting!
         </div>
+
+        <div *ngIf="showStarterPrompt" class="starter-prompt">
+  💬 Need help breaking the ice? Try: “What’s your favorite travel spot?”
+</div>
       </div>
 
       <div class="input-container">
