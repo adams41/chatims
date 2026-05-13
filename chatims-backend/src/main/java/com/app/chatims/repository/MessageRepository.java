@@ -9,8 +9,7 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
 
-    List<MessageEntity> findByChat_ChatId(Long chatId);
+    List<MessageEntity> findByChatIdOrderBySendTimestampAsc(Long chatId);
 
-    void deleteByChat_ChatId(Long chatId);
-
+    long deleteByChatId(Long chatId);
 }

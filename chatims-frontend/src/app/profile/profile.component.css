@@ -1,0 +1,192 @@
+.profile-screen {
+  min-height: 100vh;
+  padding: 3rem 1rem 5rem;
+  overflow-y: auto;
+}
+
+.container { max-width: 480px; }
+
+/* ── Cards ── */
+.card + .card,
+.card + .profile-actions { margin-top: 1rem; }
+
+.profile-header-card { text-align: center; padding: 1.6rem; }
+.section-card { padding: 1.2rem 1.4rem; }
+
+/* ── Photo slots ── */
+.photos-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.photo-slot {
+  width: 100px;
+  height: 130px;
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--color-border);
+  background: var(--color-bg-elevated);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.photo-slot.has-photo { border-style: solid; border-color: var(--color-border); }
+
+.slot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.slot-add {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.photo-slot:hover .slot-add { color: var(--color-primary); }
+.photo-slot:hover { border-color: var(--color-primary); }
+
+.slot-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.profile-name { font-size: 1.4rem; margin: 0.4rem 0 0.2rem; }
+.gender-label { margin: 0; font-size: 0.9rem; text-transform: capitalize; }
+
+/* ── Section header (label + edit button side by side) ── */
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.section-header h3 { margin: 0 0 2px; font-size: 0.95rem; }
+.hint { font-size: 0.82rem; color: var(--color-text-muted); margin: 0; }
+
+.btn-sm {
+  padding: 5px 14px;
+  font-size: 0.82rem;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+/* ── Inline preferences editor ── */
+.inline-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  margin-top: 0.4rem;
+}
+
+.pref-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pref-label { font-size: 0.82rem; color: var(--color-text-muted); }
+.pref-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ── Distance filter ── */
+.distance-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.distance-input {
+  width: 80px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.distance-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+.saved-hint { color: var(--color-success); margin-top: 6px; }
+
+/* ── Matches list ── */
+.matches-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.8rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.match-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+.match-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.match-avatar.placeholder {
+  background: var(--color-bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.match-info strong { display: block; font-size: 0.95rem; }
+.contact-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.contact-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+.contact-badge.wa { background: rgba(37, 211, 102, 0.15); color: #25d366; }
+.contact-badge.tg { background: rgba(42, 171, 238, 0.15); color: #2aabee; }
+.contact-badge.vb { background: rgba(115, 96, 242, 0.15); color: #7360f2; }
+
+/* ── Bottom actions ── */
+.profile-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1.2rem;
+}
+
+/* ── Error / hint ── */
+.field-error { color: var(--color-danger); font-size: 0.82rem; margin: 4px 0 0; }
+
+/* ── Spinner ── */
+.center-screen { display: flex; align-items: center; justify-content: center; height: 60vh; }

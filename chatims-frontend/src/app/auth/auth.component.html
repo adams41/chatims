@@ -1,0 +1,91 @@
+<app-theme-toggle />
+<a class="back-btn" routerLink="/" title="Back">←</a>
+<section class="auth-screen">
+  <div class="auth-card card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <span class="dot d1"></span>
+      <span class="dot d2"></span>
+      <span class="dot d3"></span>
+    </div>
+    <h1 class="brand">Chatims</h1>
+    <p class="text-muted tagline">Anonymous chats. Real connections.</p>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn" [class.active]="tab() === 'login'" (click)="switchTab('login')">Sign in</button>
+      <button class="tab-btn" [class.active]="tab() === 'register'" (click)="switchTab('register')">Create account</button>
+    </div>
+
+    <!-- Success banner -->
+    @if (success()) {
+      <div class="banner success">{{ success() }}</div>
+    }
+
+    <!-- Error banner -->
+    @if (error()) {
+      <div class="banner error">{{ error() }}</div>
+    }
+
+    <!-- ── LOGIN ─────────────────────────────────── -->
+    @if (tab() === 'login') {
+      <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="auth-form stack">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" formControlName="username" placeholder="you@example.com" autocomplete="email" />
+          @if (fieldInvalid('login', 'username')) {
+            <span class="field-error">Enter a valid email.</span>
+          }
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+          @if (fieldInvalid('login', 'password')) {
+            <span class="field-error">Password is required.</span>
+          }
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" [disabled]="loading()">
+          @if (loading()) { <span class="spin"></span> Signing in… } @else { Sign in }
+        </button>
+      </form>
+      <p class="switch-hint text-muted">No account yet? <button class="link-btn" (click)="switchTab('register')">Create one</button></p>
+    }
+
+    <!-- ── REGISTER ───────────────────────────────── -->
+    @if (tab() === 'register') {
+      <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="auth-form stack">
+        <div class="field">
+          <label>Your name</label>
+          <input type="text" formControlName="name" placeholder="Alex" autocomplete="name" />
+          @if (fieldInvalid('register', 'name')) {
+            <span class="field-error">Name must be at least 2 characters.</span>
+          }
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" formControlName="email" placeholder="you@example.com" autocomplete="email" />
+          @if (fieldInvalid('register', 'email')) {
+            <span class="field-error">Enter a valid email.</span>
+          }
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" formControlName="password" placeholder="Min. 6 characters" autocomplete="new-password" />
+          @if (fieldInvalid('register', 'password')) {
+            <span class="field-error">At least 6 characters.</span>
+          }
+        </div>
+        <div class="field">
+          <label>Confirm password</label>
+          <input type="password" formControlName="confirm" placeholder="Repeat password" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" [disabled]="loading()">
+          @if (loading()) { <span class="spin"></span> Creating account… } @else { Create account }
+        </button>
+      </form>
+      <p class="switch-hint text-muted">Already have an account? <button class="link-btn" (click)="switchTab('login')">Sign in</button></p>
+    }
+
+  </div>
+</section>

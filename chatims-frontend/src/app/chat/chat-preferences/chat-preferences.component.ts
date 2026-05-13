@@ -1,48 +1,54 @@
-import { Component } from '@angular/core';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { Gender, MatchPreferences } from '../../core/models';
+import { UserApiService } from '../../core/services/user-api.service';
+import { ThemeToggleComponent } from '../../shared/theme-toggle/theme-toggle.component';
+
+interface Question {
+  text: string;
+  options: string[];
+  key: 'ageRange' | 'gender' | 'intent';
+}
 
 @Component({
   selector: 'app-chat-preferences',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule, ThemeToggleComponent],
   templateUrl: './chat-preferences.component.html',
   styleUrls: ['./chat-preferences.component.css'],
-  animations: [
-    trigger('slideAnimation', [
-      transition(':enter', [
-        style({ transform: 'translateX(100%)', opacity: 0 }),
-        animate('400ms ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
-      ]),
-      transition(':leave', [
-        animate('400ms ease-in', style({ transform: 'translateX(-100%)', opacity: 0 })),
-      ]),
-    ]),
-  ],
 })
 export class ChatPreferencesComponent {
-  questions = [
+  private readonly router = inject(Router);
+  private readonly users = inject(UserApiService);
+
+  @Input() embedded = false;
+  @Output() savedPrefs = new EventEmitter<MatchPreferences>();
+
+  questions: Question[] = [
     {
-      text: 'What age range are you looking for in a chat partner?',
-      options: ['18-25', '25-35', '35-45', 'Doesn’t matter']
+      key: 'ageRange',
+      text: 'What age range are you looking for?',
+      options: ['18–25', '25–35', '35–45', "Doesn't matter"],
     },
     {
+      key: 'gender',
       text: 'What gender should your chat partner be?',
-      options: ['Male', 'Female', 'Doesn’t matter']
+      options: ['Male', 'Female', "Doesn't matter"],
     },
     {
+      key: 'intent',
       text: 'What are you looking for?',
-      options: ['Friendship', 'Flirting', 'Serious conversation']
-    }
+      options: ['Friendship', 'Flirting', 'Serious conversation'],
+    },
   ];
 
   currentQuestionIndex = 0;
-  preferences: Record<string, string> = {};
+  answers: Record<string, string> = {};
+  saving = false;
+  error: string | null = null;
 
-  constructor(private router: Router) {}
-
-  get currentQuestion() {
+  get currentQuestion(): Question | undefined {
     return this.questions[this.currentQuestionIndex];
   }
 
@@ -50,23 +56,59 @@ export class ChatPreferencesComponent {
     return Math.round((this.currentQuestionIndex / this.questions.length) * 100);
   }
 
+  get isDone(): boolean {
+    return this.currentQuestionIndex >= this.questions.length;
+  }
+
   selectOption(option: string): void {
-    const questionText = this.currentQuestion.text;
-    this.preferences[questionText] = option;
-    this.nextQuestion();
+    const q = this.currentQuestion;
+    if (!q) return;
+    this.answers[q.key] = option;
+    this.currentQuestionIndex++;
+    if (this.isDone) {
+      this.saveAndNavigate();
+    }
   }
 
-  nextQuestion(): void {
-    setTimeout(() => {
-      this.currentQuestionIndex++;
-      if (this.currentQuestionIndex >= this.questions.length) {
-        console.log('User answers:', this.preferences);
-        this.startChatSearch();
-      }
-    }, 400);
+  private buildPrefs(): MatchPreferences {
+    const ageRange = this.answers['ageRange'] ?? "Doesn't matter";
+    const gender = this.answers['gender'] ?? "Doesn't matter";
+    let minAge = 18;
+    let maxAge = 99;
+    if (ageRange === '18–25') { minAge = 18; maxAge = 25; }
+    else if (ageRange === '25–35') { minAge = 25; maxAge = 35; }
+    else if (ageRange === '35–45') { minAge = 35; maxAge = 45; }
+    let preferredGender: Gender | null = null;
+    if (gender === 'Male') preferredGender = 'MALE';
+    else if (gender === 'Female') preferredGender = 'FEMALE';
+    return { preferredGender, minAge, maxAge };
   }
 
-  private startChatSearch(): void {
-    this.router.navigate(['/chat']);
+  private saveAndNavigate(): void {
+    this.saving = true;
+    this.error = null;
+    const prefs = this.buildPrefs();
+
+    this.users.updatePreferences(prefs).subscribe({
+      next: () => {
+        if (this.embedded) {
+          this.savedPrefs.emit(prefs);
+          this.saving = false;
+        } else {
+          this.router.navigate(['/matchmaking']);
+        }
+      },
+      error: err => {
+        this.saving = false;
+        this.error = err.error?.message || 'Failed to save preferences. Try again.';
+      },
+    });
+  }
+
+  reset(): void {
+    this.currentQuestionIndex = 0;
+    this.answers = {};
+    this.saving = false;
+    this.error = null;
   }
 }

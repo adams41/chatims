@@ -1,13 +1,39 @@
-<div *ngIf="currentQuestion" [@slideAnimation] class="question-container">
-    <h2>{{ currentQuestion.text }}</h2>
-  
-    <div class="options">
-      <button *ngFor="let option of currentQuestion.options" (click)="selectOption(option)">
-        {{ option }}
-      </button>
-    </div>
-</div>
+<app-theme-toggle />
+@if (!embedded) { <a class="back-btn" routerLink="/welcome" title="Back">←</a> }
+<section class="pref-screen">
+  <div class="pref-container">
 
-<div *ngIf="currentQuestionIndex === questions.length" class="progress-container">
-    <div class="progress-bar" [style.width.%]="progress"></div>
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="progress"></div>
+    </div>
+
+    @if (!isDone) {
+      @if (currentQuestion) {
+        <div class="question-card">
+          <h2>{{ currentQuestion.text }}</h2>
+          <div class="options">
+            @for (opt of currentQuestion.options; track opt) {
+              <button
+                class="opt-btn"
+                [class.selected]="answers[currentQuestion.key] === opt"
+                (click)="selectOption(opt)"
+              >{{ opt }}</button>
+            }
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="saving-state">
+        @if (saving) {
+          <div class="spinner"></div>
+          <p class="text-muted">Saving your preferences…</p>
+        }
+        @if (error) {
+          <p class="error">{{ error }}</p>
+          <button class="opt-btn" (click)="reset()">Start over</button>
+        }
+      </div>
+    }
+
   </div>
+</section>

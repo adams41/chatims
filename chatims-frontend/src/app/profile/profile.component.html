@@ -1,0 +1,150 @@
+<app-theme-toggle />
+<section class="profile-screen">
+  <div class="container">
+
+    @if (profile(); as p) {
+
+      <!-- ── Avatar + name ── -->
+      <div class="card profile-header-card">
+        <div class="photos-row">
+          @for (slot of photoSlots(); track $index) {
+            <div class="photo-slot" [class.has-photo]="slot">
+              @if (slot) {
+                <img [src]="slot" alt="Photo" class="slot-img" />
+                <button class="slot-remove" (click)="removePhoto($index)" type="button">✕</button>
+              } @else {
+                <label class="slot-add">
+                  +
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                    (change)="onPhotoChange($event)" [disabled]="uploadingPhoto()" />
+                </label>
+              }
+            </div>
+          }
+        </div>
+        @if (uploadingPhoto()) { <p class="hint">Uploading…</p> }
+        @if (photoError()) { <p class="field-error">{{ photoError() }}</p> }
+
+        <h2 class="profile-name">{{ p.name }}@if (p.age != null) {, {{ p.age }}}</h2>
+        <p class="text-muted gender-label">{{ p.gender === 'MALE' ? 'Male' : 'Female' }}</p>
+      </div>
+
+      <!-- ── Search preferences ── -->
+      <div class="card section-card">
+        <div class="section-header">
+          <div>
+            <h3>Search preferences</h3>
+            <p class="text-muted hint">
+              {{ p.preferredGender === 'MALE' ? 'Male' : p.preferredGender === 'FEMALE' ? 'Female' : 'Any gender' }} ·
+              ages {{ p.minAge ?? '?' }}–{{ p.maxAge ?? '?' }}
+            </p>
+          </div>
+          <button class="btn btn-ghost btn-sm" (click)="editingPrefs.set(!editingPrefs())">
+            {{ editingPrefs() ? 'Cancel' : 'Edit' }}
+          </button>
+        </div>
+
+        @if (editingPrefs()) {
+          <div class="inline-prefs">
+            @for (q of prefsQuestions; track q.key) {
+              <div class="pref-row">
+                <span class="pref-label">{{ q.label }}</span>
+                <div class="pref-chips">
+                  @for (opt of q.options; track opt.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.active]="prefAnswers()[q.key] === opt.value"
+                      (click)="setPref(q.key, opt.value)"
+                    >{{ opt.label }}</button>
+                  }
+                </div>
+              </div>
+            }
+            <button class="btn btn-primary btn-sm" (click)="savePrefs()" [disabled]="savingPrefs()">
+              @if (savingPrefs()) { Saving… } @else { Save }
+            </button>
+            @if (prefsError()) { <p class="field-error">{{ prefsError() }}</p> }
+          </div>
+        }
+      </div>
+
+      <!-- ── Distance filter ── -->
+      <div class="card section-card">
+        <div class="section-header">
+          <div>
+            <h3>Distance</h3>
+            @if (p.latitude != null) {
+              <p class="text-muted hint">Radius: {{ p.maxDistanceKm ?? 'unlimited' }} km</p>
+            } @else {
+              <p class="text-muted hint">Location not shared yet</p>
+            }
+          </div>
+        </div>
+        <div class="distance-row">
+          <label class="hint">Max km</label>
+          <input
+            type="number" min="1" max="20000" placeholder="e.g. 50"
+            class="distance-input"
+            [value]="maxDistanceKm() ?? ''"
+            (input)="setDistance(($any($event.target)).value)"
+          />
+          <button
+            class="btn btn-ghost btn-sm"
+            (click)="captureLocation()"
+            [disabled]="locationStatus() === 'capturing'"
+          >
+            {{ locationStatus() === 'capturing' ? 'Locating…' : '📍 Use my location' }}
+          </button>
+        </div>
+        @if (locationStatus() === 'saved') { <p class="hint saved-hint">✓ Location saved</p> }
+        @if (locationError()) { <p class="field-error">{{ locationError() }}</p> }
+      </div>
+
+      <!-- ── Matched contacts ── -->
+      <div class="card section-card">
+        <h3>Your matches</h3>
+        @if (loading()) {
+          <div class="spinner" style="margin: 1rem auto;"></div>
+        } @else if (matches().length === 0) {
+          <p class="text-muted hint">No matches yet — start chatting!</p>
+        } @else {
+          <ul class="matches-list">
+            @for (m of matches(); track m.userId) {
+              <li class="match-row">
+                @if (photoUrl(m.photoPath)) {
+                  <img [src]="photoUrl(m.photoPath)" [alt]="m.name" class="match-avatar" />
+                } @else {
+                  <div class="match-avatar placeholder">{{ m.name.charAt(0) }}</div>
+                }
+                <div class="match-info">
+                  <strong>{{ m.name }}, {{ m.age }}</strong>
+                  <div class="contact-chips">
+                    @if (m.whatsappNumber) {
+                      <span class="contact-badge wa">WA {{ m.whatsappNumber }}</span>
+                    }
+                    @if (m.telegramHandle) {
+                      <span class="contact-badge tg">TG {{ m.telegramHandle }}</span>
+                    }
+                    @if (m.viberNumber) {
+                      <span class="contact-badge vb">Viber {{ m.viberNumber }}</span>
+                    }
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- ── Actions ── -->
+      <div class="profile-actions">
+        <button class="btn btn-primary" (click)="startChat()">Find a partner</button>
+        <button class="btn btn-ghost" (click)="logout()">Logout</button>
+      </div>
+
+    } @else {
+      <div class="center-screen"><div class="spinner"></div></div>
+    }
+  </div>
+</section>

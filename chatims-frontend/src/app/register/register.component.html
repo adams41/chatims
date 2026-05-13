@@ -1,0 +1,86 @@
+<app-theme-toggle />
+<a class="back-btn" routerLink="/welcome" title="Back">←</a>
+<section class="center-screen">
+  <div class="container">
+    <div class="card">
+      <div class="step-progress">
+        <div class="step" [class.active]="step === 'profile'" [class.done]="step === 'contacts'">1</div>
+        <div class="line" [class.done]="step === 'contacts'"></div>
+        <div class="step" [class.active]="step === 'contacts'">2</div>
+      </div>
+
+      @if (step === 'profile') {
+        <h2>Tell us about you</h2>
+        <p class="text-muted">A photo helps you match. Your profile stays hidden until both like each other.</p>
+
+        <form [formGroup]="profileForm" (ngSubmit)="submitProfile()" class="stack">
+          <div class="photo-picker">
+            <label for="photo">
+              @if (previewUrl) {
+                <img [src]="previewUrl" alt="preview" />
+              } @else {
+                <span>+</span>
+                <small>Upload photo</small>
+              }
+              <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" (change)="onFileSelected($event)" hidden />
+            </label>
+            @if (photoError) { <small class="error">{{ photoError }}</small> }
+          </div>
+
+          <div class="field">
+            <label>Age</label>
+            <input type="number" formControlName="age" min="18" max="120" placeholder="Your age" />
+          </div>
+
+          <div class="field">
+            <label>Gender</label>
+            <div class="row">
+              <label class="chip" [class.active]="profileForm.value.gender === 'MALE'">
+                <input type="radio" formControlName="gender" value="MALE" hidden /> Male
+              </label>
+              <label class="chip" [class.active]="profileForm.value.gender === 'FEMALE'">
+                <input type="radio" formControlName="gender" value="FEMALE" hidden /> Female
+              </label>
+            </div>
+          </div>
+
+          @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
+
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+            @if (isLoading) { <span class="spinner-sm"></span> } @else { Continue }
+          </button>
+        </form>
+      } @else {
+        <h2>Where to reach you</h2>
+        <p class="text-muted">Add at least one. After a mutual match, only these get revealed.</p>
+
+        <form [formGroup]="contactsForm" (ngSubmit)="submitContacts()" class="stack">
+          <div class="field">
+            <label>WhatsApp</label>
+            <input formControlName="whatsappNumber" placeholder="+49 ..." />
+          </div>
+          <div class="field">
+            <label>Telegram</label>
+            <input formControlName="telegramHandle" placeholder="@username" />
+          </div>
+          <div class="field">
+            <label>Viber</label>
+            <input formControlName="viberNumber" placeholder="+49 ..." />
+          </div>
+
+          @if (contactsForm.errors?.['atLeastOneContact'] && contactsForm.touched) {
+            <p class="error">Add at least one contact method.</p>
+          }
+          @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
+
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+            @if (isLoading) { <span class="spinner-sm"></span> } @else { Save and continue }
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="goBackToProfile()" [disabled]="isLoading">
+            ← Change photo / details
+          </button>
+        </form>
+      }
+    </div>
+  </div>
+</section>

@@ -1,15 +1,13 @@
 package com.app.chatims.service;
 
+import com.app.chatims.dto.MessageDto;
 import com.app.chatims.entity.MessageEntity;
 
 import java.util.List;
 
 public interface MessageService {
 
-    MessageEntity sendMessage(MessageEntity message);
+    MessageEntity sendMessage(Long chatId, Long senderId, String content);
 
-    List<MessageEntity> getMessagesByChatId(Long chatId);
-
-    void deleteMessagesByChatId(Long chatId);
-
+    List<MessageDto> getMessagesByChatId(Long chatId, Long viewerUserId);
 }

@@ -1,28 +1,28 @@
-<div class="hero-container">
+<div class="hero-container" [attr.data-theme]="theme">
 
+  <!-- Hamburger menu (top-left) -->
   <div class="outer-menu">
-    <input class="checkbox-toggle" type="checkbox" id="menu-toggle" />
+    <input class="checkbox-toggle" type="checkbox" id="menu-toggle" autocomplete="off" />
     <label class="hamburger" for="menu-toggle">
       <div></div>
     </label>
-
     <div class="menu">
       <div>
         <div>
           <div class="content-container">
             <h1>About</h1>
             <p>
-              Chatims is an interactive web chat application that lets users engage in conversations, currently powered by AI-generated responses. Users can personalize their experience by setting preferences, such as selecting a preferred gender for interactions.
+              Chatims is an anonymous one-on-one chat app. You chat with a random stranger for 7 minutes.
+              If both of you like each other — your real contacts unlock.
             </p>
-
             <h1>How It Works</h1>
             <p>
-              Set your preferences, start a chat, and enjoy conversations.
+              Set your preferences, start a chat, and enjoy the conversation.
+              If there's a mutual like — you both see each other's contact info.
             </p>
-
-            <h1>Privacy & Safety</h1>
+            <h1>Privacy &amp; Safety</h1>
             <p>
-              We respect your privacy and ensure safe chatting experiences.
+              You stay anonymous until a mutual match. No personal info is shared without consent.
             </p>
           </div>
         </div>
@@ -30,11 +30,28 @@
     </div>
   </div>
 
+  <!-- Dark/light mode toggle (top-right) -->
+  <button class="theme-toggle" (click)="toggleTheme()" [title]="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+    {{ theme === 'dark' ? '☀️' : '🌙' }}
+  </button>
+
+  <!-- Lottie animation -->
   <div #lottie class="lottie-animation"></div>
 
-  <button mat-fab extended class="start-button" (click)="goToRegister()">
-    <mat-icon>chat</mat-icon>
-    <span class="start-text">Let’s chat!</span>
-  </button>
+  <!-- Tagline -->
+  <div class="tagline">
+    <h1 class="brand">Chatims</h1>
+    <p>Anonymous chats. Real connections.</p>
+  </div>
+
+  <!-- CTA button -->
+  @if (!loading) {
+    <button class="start-button" (click)="goToChat()">
+      <span class="btn-icon">💬</span>
+      <span class="start-text">Let's chat!</span>
+    </button>
+  } @else {
+    <div class="spinner"></div>
+  }
 
 </div>

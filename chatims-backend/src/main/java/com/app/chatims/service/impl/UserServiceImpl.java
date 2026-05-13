@@ -1,11 +1,13 @@
 package com.app.chatims.service.impl;
 
-import com.app.chatims.dto.UserDto;
+import com.app.chatims.dto.MatchPreferencesDto;
+import com.app.chatims.dto.UpdateContactsRequest;
 import com.app.chatims.entity.UserEntity;
+import com.app.chatims.exception.UserNotFoundException;
 import com.app.chatims.repository.UserRepository;
-import com.app.chatims.service.KeycloakService;
 import com.app.chatims.service.UserService;
 import com.app.chatims.util.Gender;
+import com.app.chatims.util.GeoUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,51 +16,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final KeycloakService keycloakService;
-    private final UserRepository userRepository;
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private final UserRepository userRepository;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     @Override
     @Transactional
-    public UserEntity registerUser(UserDto userDto) throws IOException {
-        String photoPath = savePhoto(userDto.getPhoto());
-
-        String keycloakId = keycloakService.registerUserInKeycloak(
-                userDto.getName(),
-                userDto.getEmail(),
-                userDto.getPassword()
-        );
-
-        UserEntity user = new UserEntity();
-        user.setName(userDto.getName());
-        user.setEmail(userDto.getEmail());
-        user.setAge(userDto.getAge());
-        user.setGender(userDto.getGender());
-        user.setPhotoPath(photoPath);
-        user.setKeycloakId(keycloakId);
-
-        logger.info("Registered user: {} with Keycloak ID: {}", user.getName(), keycloakId);
-
-        return userRepository.save(user);
-    }
-
-    @Override
     public UserEntity completeUserProfile(
             String keycloakId,
             String name,
@@ -67,77 +43,97 @@ public class UserServiceImpl implements UserService {
             MultipartFile photo
     ) throws IOException {
         if (userRepository.findByKeycloakId(keycloakId).isPresent()) {
-            throw new IllegalStateException("User profile already completed for Keycloak ID: " + keycloakId);
+            throw new IllegalStateException("Profile already exists for keycloakId: " + keycloakId);
         }
-
-        String photoPath = savePhoto(photo);
-
         UserEntity user = new UserEntity();
         user.setName(name);
         user.setAge(age);
         user.setGender(gender);
-        user.setPhotoPath(photoPath);
         user.setKeycloakId(keycloakId);
-
-        logger.debug("Completing profile for Keycloak user: {}", keycloakId);
-
+        user.setPhotoPath(savePhoto(photo));
         return userRepository.save(user);
-    }
-
-    public String savePhoto(MultipartFile photo) throws IOException {
-        if (photo == null || photo.isEmpty()) {
-            logger.debug("Photo is not presented.");
-            return null;
-        }
-
-        String uniqueFileName = UUID.randomUUID() + "_" + sanitizeFileName(photo.getOriginalFilename());
-        String photoPath = Paths.get(uploadDir, uniqueFileName).toAbsolutePath().toString();
-
-        File uploadDirFile = new File(uploadDir);
-        if (!uploadDirFile.exists()) {
-            uploadDirFile.mkdirs();
-        }
-
-        logger.debug("Photo saved by path: {}", photoPath);
-        Files.copy(photo.getInputStream(), Paths.get(photoPath));
-
-        return "/uploads/" + uniqueFileName;
-    }
-
-    private String sanitizeFileName(String fileName) {
-        if (fileName == null) {
-            return "unknown";
-        }
-        return fileName.replaceAll("[^a-zA-Z0-9.-]", "_");
     }
 
     @Override
     public UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
-    }
-
-    @Override
-    public List<UserEntity> getUsersForSwipe() {
-        return userRepository.findAll();
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
     }
 
     @Override
     public UserEntity getUserByKeycloakId(String keycloakId) {
         return userRepository.findByKeycloakId(keycloakId)
-                .orElseThrow(() -> new RuntimeException("User not found by Keycloak ID: " + keycloakId));
+                .orElseThrow(() -> new UserNotFoundException("User not found for keycloakId: " + keycloakId));
     }
 
     @Override
-    public boolean setPreferencesFlag(Long id) {
-        Optional<UserEntity> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            UserEntity user = optionalUser.get();
-            user.setPreferencesSet(true);
-            userRepository.save(user);
-            return true;
-        } else {
-            return false;
+    @Transactional
+    public UserEntity updateContacts(String keycloakId, UpdateContactsRequest request) {
+        UserEntity user = getUserByKeycloakId(keycloakId);
+        user.setWhatsappNumber(blankToNull(request.whatsappNumber()));
+        user.setTelegramHandle(blankToNull(request.telegramHandle()));
+        user.setViberNumber(blankToNull(request.viberNumber()));
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public UserEntity updatePreferences(String keycloakId, MatchPreferencesDto prefs) {
+        if (prefs.minAge() > prefs.maxAge()) {
+            throw new IllegalArgumentException("minAge must be <= maxAge");
         }
+        UserEntity user = getUserByKeycloakId(keycloakId);
+        user.setPreferredGender(prefs.preferredGender());
+        user.setMinAge(prefs.minAge());
+        user.setMaxAge(prefs.maxAge());
+        user.setPreferencesSet(true);
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public UserEntity replacePhoto(String keycloakId, MultipartFile photo) throws IOException {
+        if (photo == null || photo.isEmpty()) {
+            throw new IllegalArgumentException("Photo is required.");
+        }
+        UserEntity user = getUserByKeycloakId(keycloakId);
+        user.setPhotoPath(savePhoto(photo));
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public UserEntity updateLocation(String keycloakId, Double latitude, Double longitude, Integer maxDistanceKm) {
+        UserEntity user = getUserByKeycloakId(keycloakId);
+        if (latitude != null && longitude != null) {
+            double[] quantized = GeoUtils.quantizeLocation(latitude, longitude);
+            user.setLatitude(quantized[0]);
+            user.setLongitude(quantized[1]);
+        } else {
+            user.setLatitude(null);
+            user.setLongitude(null);
+        }
+        user.setMaxDistanceKm(maxDistanceKm);
+        return userRepository.save(user);
+    }
+
+    private String savePhoto(MultipartFile photo) throws IOException {
+        if (photo == null || photo.isEmpty()) return null;
+        String filename = UUID.randomUUID() + "_" + sanitize(photo.getOriginalFilename());
+        Path dir = Paths.get(uploadDir);
+        Files.createDirectories(dir);
+        Path target = dir.resolve(filename);
+        Files.copy(photo.getInputStream(), target);
+        log.debug("Saved photo to {}", target);
+        return "/uploads/" + filename;
+    }
+
+    private static String sanitize(String filename) {
+        if (filename == null) return "unknown";
+        return filename.replaceAll("[^a-zA-Z0-9.\\-_]", "_");
+    }
+
+    private static String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
     }
 }

@@ -1,43 +1,62 @@
-import { Component, OnInit, ViewChild, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router'; 
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { KeycloakService } from '../../utils/keycloak/keycloak.service';
+import { CommonModule } from '@angular/common';
+import { Component, ElementRef, Inject, OnInit, PLATFORM_ID, ViewChild, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+import { KeycloakService } from '../../core/services/keycloak.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-splash-screen',
-  imports: [MatButtonModule,
-    MatIconModule, CommonModule],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './splash-screen.component.html',
-  styleUrls: ['./splash-screen.component.css']
-  
+  styleUrls: ['./splash-screen.component.css'],
 })
 export class SplashScreenComponent implements OnInit {
   @ViewChild('lottie', { static: true }) lottieContainer!: ElementRef;
 
-  constructor(private router: Router,
-    private keycloakService: KeycloakService,  @Inject(PLATFORM_ID) private platformId: Object) {}
+  private readonly router = inject(Router);
+  private readonly keycloak = inject(KeycloakService);
+  private readonly themeSvc = inject(ThemeService);
 
-   ngOnInit() { 
-    if (isPlatformBrowser(this.platformId)) {
-      import('lottie-web').then((lottie) => {
-        const animation = (lottie as any).loadAnimation({
-          container: this.lottieContainer.nativeElement,
-          path: '/assets/animation/animation.json',
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          rendererSettings: {
-            preserveAspectRatio: 'xMidYMid meet'
-          }
-        });
-      });
-    }}
+  loading = true;
 
- async goToRegister() {
-  await this.keycloakService.init();
-  await this.keycloakService.login();
+  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
+
+  get theme(): 'dark' | 'light' {
+    return this.themeSvc.theme();
   }
 
-   }
+  ngOnInit(): void {
+    this.loading = false;
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => this.loadLottie(), 0);
+    }
+  }
+
+  goToChat(): void {
+    if (this.keycloak.isTokenValid) {
+      this.router.navigate(['/welcome']);
+    } else {
+      this.router.navigate(['/auth']);
+    }
+  }
+
+  toggleTheme(): void {
+    this.themeSvc.toggle();
+  }
+
+  private loadLottie(): void {
+    if (!this.lottieContainer?.nativeElement) return;
+    import('lottie-web').then((lottie: any) => {
+      (lottie.default ?? lottie).loadAnimation({
+        container: this.lottieContainer.nativeElement,
+        path: '/assets/animation/animation.json',
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
+      });
+    });
+  }
+}

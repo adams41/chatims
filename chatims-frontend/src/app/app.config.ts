@@ -1,28 +1,17 @@
-import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core';
-import { provideRouter } from '@angular/router'; 
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { provideCacheableAnimationLoader, provideLottieOptions } from 'ngx-lottie';
-import { routes } from './app-routing.module';
+import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import {keycloakHttpInterceptor} from './utils/http/keycloak-http.interceptor';
-import {KeycloakService} from './utils/keycloak/keycloak.service';
+import { keycloakHttpInterceptor } from './core/interceptors/keycloak-http.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideLottieOptions({
-      player: () => import('lottie-web')
-    }),
-    {
-      provide:  provideAppInitializer,
-      multi: true,
-      useFactory: () => () => inject(KeycloakService).init()
-    },
-    provideCacheableAnimationLoader(),
     provideRouter(routes),
-    provideAnimations(), 
-    provideHttpClient(   
-      withInterceptors([keycloakHttpInterceptor])
-  ),
- 
-  ]
+    provideAnimations(),
+    provideHttpClient(withInterceptors([keycloakHttpInterceptor])),
+    provideLottieOptions({ player: () => import('lottie-web') }),
+    provideCacheableAnimationLoader(),
+  ],
 };

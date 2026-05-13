@@ -1,16 +1,14 @@
 package com.app.chatims.service;
 
-import com.app.chatims.dto.UserDto;
+import com.app.chatims.dto.MatchPreferencesDto;
+import com.app.chatims.dto.UpdateContactsRequest;
 import com.app.chatims.entity.UserEntity;
 import com.app.chatims.util.Gender;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface UserService {
-
-    UserEntity registerUser(UserDto userDto) throws IOException;
 
     UserEntity completeUserProfile(
             String keycloakId,
@@ -22,10 +20,13 @@ public interface UserService {
 
     UserEntity getUserById(Long userId);
 
-    List<UserEntity> getUsersForSwipe();
-
     UserEntity getUserByKeycloakId(String keycloakId);
 
-    boolean setPreferencesFlag(Long id);
+    UserEntity updateContacts(String keycloakId, UpdateContactsRequest request);
 
+    UserEntity updatePreferences(String keycloakId, MatchPreferencesDto prefs);
+
+    UserEntity replacePhoto(String keycloakId, MultipartFile photo) throws IOException;
+
+    UserEntity updateLocation(String keycloakId, Double latitude, Double longitude, Integer maxDistanceKm);
 }
