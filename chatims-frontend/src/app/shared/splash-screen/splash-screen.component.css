@@ -228,3 +228,41 @@
   .start-button { font-size: 15px; padding: 12px 36px; }
   .brand { font-size: 2.2rem; }
 }
+
+@media (max-width: 600px) {
+  .hero-container {
+    min-height: 100dvh;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+  .legal-footer {
+    position: static;
+    margin-top: 1.2rem;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+.legal-footer {
+  position: absolute;
+  bottom: 1.2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  opacity: 0.5;
+}
+
+.legal-footer a {
+  color: var(--text, #fff);
+  text-decoration: none;
+}
+
+.legal-footer a:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.legal-footer span {
+  color: var(--text, #fff);
+}

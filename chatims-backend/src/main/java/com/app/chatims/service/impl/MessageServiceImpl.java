@@ -8,11 +8,13 @@ import com.app.chatims.exception.MessageSendException;
 import com.app.chatims.repository.ChatRepository;
 import com.app.chatims.repository.MessageRepository;
 import com.app.chatims.repository.UserRepository;
-import com.app.chatims.service.BotReplyService;
 import com.app.chatims.service.MessageService;
 import com.app.chatims.util.ChatStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -23,10 +25,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
+    private static final Logger log = LoggerFactory.getLogger(MessageServiceImpl.class);
+
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
-    private final BotReplyService botReplyService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -46,15 +50,21 @@ public class MessageServiceImpl implements MessageService {
         message.setContent(content);
         message.setSendTimestamp(LocalDateTime.now());
         MessageEntity saved = messageRepository.save(message);
-
-        Long otherId = chat.otherParticipant(senderId);
-        userRepository.findById(otherId).ifPresent(other -> {
-            if (other.isBot()) {
-                botReplyService.scheduleReply(chat.getChatId(), other.getUserId(), content);
-            }
-        });
-
+        pushToRecipient(chat, senderId, MessageDto.from(saved));
         return saved;
+    }
+
+    private void pushToRecipient(ChatEntity chat, Long senderId, MessageDto dto) {
+        Long recipientId = chat.otherParticipant(senderId);
+        userRepository.findById(recipientId).ifPresent(recipient -> {
+            messagingTemplate.convertAndSendToUser(
+                    recipient.getKeycloakId(),
+                    "/queue/messages",
+                    dto
+            );
+            log.info("WS push: msg {} → userId={} keycloakId={}",
+                    dto.id(), recipientId, recipient.getKeycloakId());
+        });
     }
 
     @Override

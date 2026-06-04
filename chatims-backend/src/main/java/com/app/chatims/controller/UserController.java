@@ -29,9 +29,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    private static final String[] ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"};
-
     private final UserService userService;
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
@@ -58,7 +55,7 @@ public class UserController {
     ) {
         String keycloakId = AuthUtils.keycloakIdOf(auth);
 
-        String validationError = validateProfileInputs(age, gender, photo);
+        String validationError = validateProfileInputs(age, gender);
         if (validationError != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", validationError));
         }
@@ -107,12 +104,6 @@ public class UserController {
     @PostMapping("/me/photo")
     public ResponseEntity<?> replacePhoto(Authentication auth, @RequestParam("photo") MultipartFile photo) {
         String keycloakId = AuthUtils.keycloakIdOf(auth);
-        if (photo == null || photo.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Photo is required."));
-        }
-        if (photo.getSize() > MAX_FILE_SIZE) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Photo too large (max 5MB)."));
-        }
         try {
             UserEntity user = userService.replacePhoto(keycloakId, photo);
             return ResponseEntity.ok(UserProfileDto.from(user));
@@ -142,17 +133,7 @@ public class UserController {
         return ResponseEntity.ok(UserProfileDto.from(user));
     }
 
-    private String validateProfileInputs(Integer age, String gender, MultipartFile photo) {
-        if (photo == null || photo.isEmpty()) return "Photo is required.";
-        if (photo.getSize() > MAX_FILE_SIZE) return "Photo too large (max 5MB).";
-        String contentType = photo.getContentType();
-        boolean validType = false;
-        if (contentType != null) {
-            for (String type : ALLOWED_TYPES) {
-                if (type.equals(contentType)) { validType = true; break; }
-            }
-        }
-        if (!validType) return "Invalid file type. Use JPG, PNG, or WebP.";
+    private String validateProfileInputs(Integer age, String gender) {
         if (age == null || age < 18 || age > 120) return "Age must be between 18 and 120.";
         if (gender == null || gender.isBlank()) return "Gender is required.";
         return null;

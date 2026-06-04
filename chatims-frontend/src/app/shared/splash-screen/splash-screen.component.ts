@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Inject, OnInit, PLATFORM_ID, ViewChild, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { KeycloakService } from '../../core/services/keycloak.service';
 import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-splash-screen',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './splash-screen.component.html',
   styleUrls: ['./splash-screen.component.css'],
 })

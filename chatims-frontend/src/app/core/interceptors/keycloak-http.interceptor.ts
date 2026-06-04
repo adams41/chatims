@@ -1,5 +1,6 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { KeycloakService } from '../services/keycloak.service';
 import { AuthApiService } from '../services/auth-api.service';
@@ -7,6 +8,7 @@ import { AuthApiService } from '../services/auth-api.service';
 export const keycloakHttpInterceptor: HttpInterceptorFn = (req, next) => {
   const keycloak = inject(KeycloakService);
   const authApi = inject(AuthApiService);
+  const router = inject(Router);
 
   if (req.url.includes('/auth/login') || req.url.includes('/auth/register')) {
     return next(req);
@@ -31,11 +33,13 @@ export const keycloakHttpInterceptor: HttpInterceptorFn = (req, next) => {
             }),
             catchError(() => {
               keycloak.clearTokens();
+              router.navigate(['/']);
               return throwError(() => err);
             })
           );
         }
         keycloak.clearTokens();
+        router.navigate(['/']);
       }
       return throwError(() => err);
     })

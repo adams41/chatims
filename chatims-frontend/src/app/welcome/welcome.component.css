@@ -4,6 +4,8 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
+    height: 100dvh;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     text-align: center;
     animation: fadeIn 2s ease-in-out;
   }

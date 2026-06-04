@@ -1,20 +1,40 @@
 <app-theme-toggle />
 <section class="center-screen">
   <div class="container text-center stack">
-    @if (status === 'searching') {
+
+    @if (status === 'joining' || status === 'searching') {
       <div class="search-pulse">
         <span></span><span></span><span></span>
       </div>
-      <h2>Finding someone for you...</h2>
-      <p class="text-muted">Matching based on your preferences.</p>
-    } @else {
-      <div class="empty">🙁</div>
-      <h2>No match yet</h2>
+      @if (status === 'joining') {
+        <h2>Joining queue...</h2>
+        <p class="text-muted">Setting up your search.</p>
+      } @else {
+        <h2>Finding someone for you...</h2>
+        <p class="text-muted">Looking for a real person matching your preferences. This can take up to 30 seconds.</p>
+        <button class="btn btn-ghost btn-sm" style="margin-top: 1rem;" (click)="back()">Cancel</button>
+      }
+    }
+
+    @if (status === 'no_match') {
+      <div class="empty-icon">😔</div>
+      <h2>No one found right now</h2>
+      <p class="text-muted">Nobody matching your preferences is searching at the moment. Try again in a bit!</p>
+      <div class="row" style="justify-content: center; margin-top: 1.5rem;">
+        <button class="btn btn-ghost" (click)="back()">Change preferences</button>
+        <button class="btn btn-primary" (click)="retry()">Search again</button>
+      </div>
+    }
+
+    @if (status === 'failed') {
+      <div class="empty-icon">⚠️</div>
+      <h2>Something went wrong</h2>
       <p class="text-muted">{{ errorMessage }}</p>
-      <div class="row" style="justify-content: center;">
+      <div class="row" style="justify-content: center; margin-top: 1.5rem;">
         <button class="btn btn-ghost" (click)="back()">Change preferences</button>
         <button class="btn btn-primary" (click)="retry()">Try again</button>
       </div>
     }
+
   </div>
 </section>

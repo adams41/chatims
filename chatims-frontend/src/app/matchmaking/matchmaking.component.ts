@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription, catchError, of, timeout } from 'rxjs';
+import { Subscription, catchError, of, switchMap } from 'rxjs';
 import { MatchmakingApiService } from '../core/services/matchmaking-api.service';
 import { UserApiService } from '../core/services/user-api.service';
 import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.component';
+
+type Status = 'joining' | 'searching' | 'no_match' | 'failed';
 
 @Component({
   selector: 'app-matchmaking',
@@ -12,83 +14,96 @@ import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.compon
   imports: [CommonModule, ThemeToggleComponent],
   templateUrl: './matchmaking.component.html',
   styleUrls: ['./matchmaking.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MatchmakingComponent implements OnInit, OnDestroy {
   private readonly matchmaking = inject(MatchmakingApiService);
   private readonly users = inject(UserApiService);
   private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  status: 'searching' | 'failed' = 'searching';
+  status: Status = 'joining';
   errorMessage: string | null = null;
+
   private sub?: Subscription;
+  private abortController?: AbortController;
 
   ngOnInit(): void {
     this.doSearch();
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.cancel();
   }
 
   retry(): void {
-    this.status = 'searching';
+    this.cancel();
+    this.status = 'joining';
     this.errorMessage = null;
+    this.cdr.markForCheck();
     this.doSearch();
   }
 
   back(): void {
-    this.router.navigate(['/preferences']);
+    this.cancel();
+    this.router.navigate(['/profile']);
+  }
+
+  private setStatus(s: Status, msg: string | null = null): void {
+    this.zone.run(() => {
+      this.status = s;
+      this.errorMessage = msg;
+      this.cdr.markForCheck();
+    });
   }
 
   private doSearch(): void {
-    this.sub?.unsubscribe();
-    this.sub = this.users
-      .me()
-      .pipe(catchError(() => of(null)))
-      .subscribe(profile => {
-        if (!profile) {
-          this.fail('Could not load your profile. Please log in again.');
-          this.router.navigate(['/welcome']);
-          return;
-        }
-        if (!profile.hasContact) {
-          this.fail('Add at least one contact method first.');
-          this.router.navigate(['/register']);
-          return;
-        }
-        if (profile.minAge == null || profile.maxAge == null) {
-          this.fail('Set your preferences first.');
-          this.router.navigate(['/preferences']);
-          return;
-        }
+    this.sub = this.users.me().pipe(
+      catchError(() => of(null)),
+      switchMap(profile => {
+        if (!profile) { this.router.navigate(['/welcome']); return of(null); }
+        if (!profile.hasContact) { this.router.navigate(['/register']); return of(null); }
+        if (profile.minAge == null || profile.maxAge == null) { this.router.navigate(['/profile']); return of(null); }
 
-        this.sub = this.matchmaking
-          .find({
-            preferredGender: profile.preferredGender,
-            minAge: profile.minAge,
-            maxAge: profile.maxAge,
+        const prefs = {
+          preferredGender: profile.preferredGender,
+          minAge: profile.minAge,
+          maxAge: profile.maxAge,
+        };
+
+        return this.matchmaking.join(prefs).pipe(
+          catchError(err => {
+            this.setStatus('failed', err?.error?.message || 'Could not join queue.');
+            return of(null);
           })
-          .pipe(
-            timeout(12000),
-            catchError(err => {
-              const msg =
-                err?.name === 'TimeoutError'
-                  ? 'Search timed out. Try again.'
-                  : err?.error?.message || err?.message || 'No partner available right now.';
-              this.fail(msg);
-              return of(null);
-            })
-          )
-          .subscribe(session => {
-            if (session) {
-              this.router.navigate(['/chat', session.chatId]);
-            }
-          });
-      });
+        );
+      }),
+      switchMap(joined => {
+        if (joined === null) return of(null);
+        this.setStatus('searching');
+        this.abortController = new AbortController();
+        return this.matchmaking.stream(this.abortController.signal).pipe(
+          catchError(err => {
+            this.setStatus('failed', err?.message || 'Connection lost. Try again.');
+            return of(null);
+          })
+        );
+      })
+    ).subscribe(event => {
+      if (!event) return;
+      if (event.type === 'matched') {
+        this.zone.run(() => this.router.navigate(['/chat', event.session.chatId]));
+      } else if (event.type === 'no_match') {
+        this.setStatus('no_match');
+      } else if (event.type === 'error') {
+        this.setStatus('failed', event.message || 'Something went wrong.');
+      }
+    });
   }
 
-  private fail(msg: string): void {
-    this.status = 'failed';
-    this.errorMessage = msg;
+  private cancel(): void {
+    this.sub?.unsubscribe();
+    this.abortController?.abort();
   }
 }

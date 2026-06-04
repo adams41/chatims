@@ -53,9 +53,6 @@ public class UserEntity {
     @Column(name = "max_age")
     private Integer maxAge;
 
-    @Column(name = "is_bot", nullable = false)
-    private boolean isBot;
-
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
 

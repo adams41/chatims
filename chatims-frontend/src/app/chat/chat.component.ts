@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   AfterViewChecked,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   OnDestroy,
@@ -11,13 +12,17 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subscription, interval, switchMap } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ChatMessage, ChatSession, RevealedProfile, UserProfile } from '../core/models';
 import { ChatApiService } from '../core/services/chat-api.service';
+import { ChatRealtimeService, TypingEvent } from '../core/services/chat-realtime.service';
 import { UserApiService } from '../core/services/user-api.service';
 import { KeycloakService } from '../core/services/keycloak.service';
 import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.component';
+
+const TYPING_EMIT_THROTTLE_MS = 1500;
+const TYPING_FADE_MS = 3000;
 
 @Component({
   selector: 'app-chat',
@@ -25,9 +30,11 @@ import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.compon
   imports: [CommonModule, FormsModule, RouterModule, ThemeToggleComponent],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private readonly chatApi = inject(ChatApiService);
+  private readonly realtime = inject(ChatRealtimeService);
   private readonly userApi = inject(UserApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -44,21 +51,30 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   messages = signal<ChatMessage[]>([]);
   newMessage = '';
   revealed = signal<RevealedProfile | null>(null);
+  partnerTyping = signal(false);
+  partnerLeftEarly = signal(false);
 
   sending = signal(false);
   liking = signal(false);
   loadingChat = signal(true);
   errorMessage = signal<string | null>(null);
+  connectionLost = signal(false);
 
-  private pollSub?: Subscription;
+  private routeSub?: Subscription;
+  private realtimeSubs: Subscription[] = [];
   private timerSub?: Subscription;
   private shouldScrollToBottom = false;
-  private lastMessageCount = 0;
   private initialMatchState = false;
+  private lastTypingEmitAt = 0;
+  private typingFadeHandle: ReturnType<typeof setTimeout> | null = null;
+
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.realtime.connect();
+    this.wireRealtime();
+
+    this.routeSub = this.route.paramMap.subscribe(params => {
       const newId = Number(params.get('id'));
-      if (newId === this.chatId) return; 
+      if (newId === this.chatId) return;
       this.chatId = newId;
       this.resetState();
       this.userApi.me().subscribe({
@@ -66,7 +82,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
           this.me.set(profile);
           this.loadSession();
           this.loadMessages();
-          this.startPolling();
           this.startCountdown();
         },
         error: () => this.router.navigate(['/welcome']),
@@ -74,18 +89,59 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     });
   }
 
+  private wireRealtime(): void {
+    this.realtimeSubs.push(
+      this.realtime.messages().subscribe(msg => {
+        if (msg.chatId !== this.chatId) return;
+        const existing = this.messages();
+        if (existing.some(m => m.id === msg.id)) return;
+        this.messages.set([...existing, msg]);
+        this.shouldScrollToBottom = true;
+      }),
+      this.realtime.sessions().subscribe(session => {
+        if (session.chatId !== this.chatId) return;
+        const wasActive = this.session()?.status === 'ACTIVE';
+        if (wasActive && session.status === 'ENDED' && session.remainingSeconds > 0) {
+          this.partnerLeftEarly.set(true);
+        }
+        this.session.set(session);
+        if (session.mutualMatch && !this.revealed() && !this.initialMatchState) {
+          this.fetchReveal();
+        }
+      }),
+      this.realtime.typing().subscribe((evt: TypingEvent) => {
+        if (evt.chatId !== this.chatId) return;
+        this.partnerTyping.set(evt.typing);
+        if (this.typingFadeHandle) clearTimeout(this.typingFadeHandle);
+        if (evt.typing) {
+          this.typingFadeHandle = setTimeout(
+            () => this.partnerTyping.set(false),
+            TYPING_FADE_MS,
+          );
+        }
+      }),
+      this.realtime.connectionState().subscribe(state => {
+        this.connectionLost.set(state === 'disconnected');
+      }),
+    );
+  }
+
   private resetState(): void {
-    this.pollSub?.unsubscribe();
     this.timerSub?.unsubscribe();
     this.session.set(null);
     this.messages.set([]);
     this.revealed.set(null);
+    this.partnerTyping.set(false);
+    this.partnerLeftEarly.set(false);
     this.loadingChat.set(true);
     this.errorMessage.set(null);
     this.searchError.set(null);
     this.searchingNew.set(false);
-    this.lastMessageCount = 0;
     this.initialMatchState = false;
+    if (this.typingFadeHandle) {
+      clearTimeout(this.typingFadeHandle);
+      this.typingFadeHandle = null;
+    }
   }
 
   ngAfterViewChecked(): void {
@@ -97,8 +153,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnDestroy(): void {
-    this.pollSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
+    this.realtimeSubs.forEach(s => s.unsubscribe());
     this.timerSub?.unsubscribe();
+    if (this.typingFadeHandle) clearTimeout(this.typingFadeHandle);
   }
 
   isMine(msg: ChatMessage): boolean {
@@ -111,16 +169,24 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.sending.set(true);
     this.chatApi.sendMessage(this.chatId, text).subscribe({
       next: msg => {
-        this.messages.update(arr => [...arr, msg]);
+        this.messages.update(arr => arr.some(m => m.id === msg.id) ? arr : [...arr, msg]);
         this.shouldScrollToBottom = true;
         this.newMessage = '';
         this.sending.set(false);
+        this.realtime.sendTyping(this.chatId, false);
       },
       error: err => {
         this.sending.set(false);
         this.errorMessage.set(err.error?.message || 'Failed to send message.');
       },
     });
+  }
+
+  onTyping(): void {
+    const now = Date.now();
+    if (now - this.lastTypingEmitAt < TYPING_EMIT_THROTTLE_MS) return;
+    this.lastTypingEmitAt = now;
+    this.realtime.sendTyping(this.chatId, this.newMessage.trim().length > 0);
   }
 
   like(): void {
@@ -143,7 +209,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   fetchReveal(): void {
     this.chatApi.reveal(this.chatId).subscribe({
-      next: profile => this.revealed.set(profile),
+      next: profile => {
+        this.revealed.set(profile);
+        this.timerSub?.unsubscribe();
+      },
       error: err => console.warn('Reveal not ready yet', err),
     });
   }
@@ -168,11 +237,15 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   newSearch(): void {
-    this.revealed.set(null);
-    this.goToMatchmaking();
+    this.timerSub?.unsubscribe();
+    this.chatApi.leaveChat(this.chatId).subscribe({
+      next: () => this.goToMatchmaking(),
+      error: () => this.goToMatchmaking(),
+    });
   }
 
   skipPartner(): void {
+    this.timerSub?.unsubscribe();
     this.chatApi.leaveChat(this.chatId).subscribe({
       next: () => this.goToMatchmaking(),
       error: () => this.goToMatchmaking(),
@@ -184,6 +257,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   logout(): void {
+    this.realtime.disconnect();
     this.keycloak.logout();
   }
 
@@ -211,42 +285,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private loadMessages(): void {
     this.chatApi.getMessages(this.chatId).subscribe(msgs => {
       this.messages.set(msgs);
-      if (msgs.length !== this.lastMessageCount) {
-        this.shouldScrollToBottom = true;
-        this.lastMessageCount = msgs.length;
-      }
+      this.shouldScrollToBottom = true;
     });
-  }
-
-  private startPolling(): void {
-    this.pollSub?.unsubscribe();
-
-    const msgPoll = interval(2000)
-      .pipe(switchMap(() => this.chatApi.getMessages(this.chatId)))
-      .subscribe({
-        next: msgs => {
-          if (msgs.length !== this.messages().length) {
-            this.messages.set(msgs);
-            this.shouldScrollToBottom = true;
-          }
-        },
-        error: () => {},
-      });
-
-    const sessionPoll = interval(5000)
-      .pipe(switchMap(() => this.chatApi.getSession(this.chatId)))
-      .subscribe({
-        next: session => {
-          this.session.set(session);
-          if (session.mutualMatch && !this.revealed() && !this.initialMatchState) {
-            this.fetchReveal();
-          }
-        },
-        error: () => { },
-      });
-
-    this.pollSub = msgPoll;
-    this.pollSub.add(sessionPoll);
   }
 
   private startCountdown(): void {

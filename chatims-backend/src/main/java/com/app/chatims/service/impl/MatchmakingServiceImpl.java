@@ -3,6 +3,7 @@ package com.app.chatims.service.impl;
 import com.app.chatims.dto.ChatSessionDto;
 import com.app.chatims.dto.MatchPreferencesDto;
 import com.app.chatims.entity.ChatEntity;
+import com.app.chatims.entity.MatchmakingQueueEntity;
 import com.app.chatims.entity.UserEntity;
 import com.app.chatims.exception.UserNotFoundException;
 import com.app.chatims.repository.ChatRepository;
@@ -11,23 +12,25 @@ import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.ChatService;
 import com.app.chatims.service.MatchmakingService;
 import com.app.chatims.util.ChatStatus;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
 public class MatchmakingServiceImpl implements MatchmakingService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchmakingServiceImpl.class);
+    private static final int POLL_INTERVAL_MS = 3000;
+    private static final int POLL_ATTEMPTS = 10; // 30s total window
+    private static final double EARTH_RADIUS_KM = 6371.0;
+    private static final double DEFAULT_MAX_DISTANCE_KM = 100.0;
 
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
@@ -36,27 +39,19 @@ public class MatchmakingServiceImpl implements MatchmakingService {
 
     @Override
     @Transactional
-    public ChatSessionDto findOrCreateChat(String keycloakId, MatchPreferencesDto preferences) {
+    public void joinQueue(String keycloakId, MatchPreferencesDto preferences) {
         UserEntity seeker = userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + keycloakId));
 
-        if (!hasAtLeastOneContact(seeker)) {
-            throw new IllegalStateException(
-                    "Add at least one contact method (WhatsApp, Telegram, or Viber) before matchmaking."
-            );
-        }
-
-        if (seeker.getGender() == null) {
+        if (!hasAtLeastOneContact(seeker))
+            throw new IllegalStateException("Add at least one contact method (WhatsApp, Telegram, or Viber) before matchmaking.");
+        if (seeker.getGender() == null)
             throw new IllegalStateException("Your profile is incomplete. Please set your gender before starting a chat.");
-        }
-        if (seeker.getAge() == null) {
+        if (seeker.getAge() == null)
             throw new IllegalStateException("Your profile is incomplete. Please set your age before starting a chat.");
-        }
-
-        // Persist updated preferences on the user
-        if (preferences.minAge() > preferences.maxAge()) {
+        if (preferences.minAge() > preferences.maxAge())
             throw new IllegalArgumentException("minAge must be <= maxAge");
-        }
+
         seeker.setPreferredGender(preferences.preferredGender());
         seeker.setMinAge(preferences.minAge());
         seeker.setMaxAge(preferences.maxAge());
@@ -64,64 +59,144 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         seeker.setLastSeenAt(LocalDateTime.now());
         userRepository.save(seeker);
 
-        // If already in an active chat, return it.
-        List<ChatEntity> activeChats = chatRepository.findActiveChatsForUser(ChatStatus.ACTIVE, seeker.getUserId(), PageRequest.of(0, 1));
-        if (!activeChats.isEmpty() && LocalDateTime.now().isBefore(activeChats.get(0).getEndsAt())) {
-            log.info("User {} already in chat {}", seeker.getUserId(), activeChats.get(0).getChatId());
-            return chatService.getSessionFor(activeChats.get(0).getChatId(), seeker.getUserId());
+        chatRepository.findActiveChatsForUser(ChatStatus.ACTIVE, seeker.getUserId(), PageRequest.of(0, 10))
+                .forEach(chat -> {
+                    chat.setStatus(ChatStatus.ENDED);
+                    chatRepository.save(chat);
+                });
+
+        MatchmakingQueueEntity entry = queueRepository.findById(seeker.getUserId())
+                .orElse(new MatchmakingQueueEntity());
+        entry.setUserId(seeker.getUserId());
+        entry.setPreferredGender(preferences.preferredGender());
+        entry.setMinAge(preferences.minAge());
+        entry.setMaxAge(preferences.maxAge());
+        entry.setJoinedAt(LocalDateTime.now());
+        queueRepository.save(entry);
+        log.info("User {} joined matchmaking queue", seeker.getUserId());
+    }
+
+    @Override
+    public ChatSessionDto searchForHuman(String keycloakId) {
+        UserEntity seeker = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + keycloakId));
+
+        for (int i = 0; i < POLL_ATTEMPTS; i++) {
+            List<ChatEntity> activeChats = chatRepository.findActiveChatsForUser(
+                    ChatStatus.ACTIVE, seeker.getUserId(), PageRequest.of(0, 1));
+            if (!activeChats.isEmpty() && LocalDateTime.now().isBefore(activeChats.get(0).getEndsAt())) {
+                log.info("User {} picked up chat {} created by partner", seeker.getUserId(), activeChats.get(0).getChatId());
+                queueRepository.deleteById(seeker.getUserId());
+                return chatService.getSessionFor(activeChats.get(0).getChatId(), seeker.getUserId());
+            }
+
+            List<UserEntity> candidates = findCandidates(seeker);
+            if (!candidates.isEmpty()) {
+                ChatSessionDto result = matchWithHuman(seeker, candidates.get(0));
+                if (result != null) return result;
+            }
+
+            try {
+                Thread.sleep(POLL_INTERVAL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
 
-        // Try to match with a human in the queue (with distance filtering if location available)
-        List<UserEntity> humanCandidates = queueRepository.findCompatibleCandidates(
+        queueRepository.deleteById(seeker.getUserId());
+        log.info("No human found for user {} after {}ms", seeker.getUserId(),
+                (long) POLL_ATTEMPTS * POLL_INTERVAL_MS);
+        return null;
+    }
+
+    protected List<UserEntity> findCandidates(UserEntity seeker) {
+        List<Long> excludedPartners = chatRepository.findExcludedPartnerIds(seeker.getUserId());
+        List<Long> excluded = excludedPartners.isEmpty() ? List.of(-1L) : excludedPartners;
+        List<UserEntity> candidates = queueRepository.findCompatibleCandidates(
                 seeker.getUserId(),
+                excluded,
                 seeker.getGender(),
-                preferences.preferredGender(),
+                seeker.getPreferredGender(),
                 seeker.getAge(),
-                preferences.minAge(),
-                preferences.maxAge(),
-                seeker.getLatitude(),
-                seeker.getLongitude()
+                seeker.getMinAge() != null ? seeker.getMinAge() : 18,
+                seeker.getMaxAge() != null ? seeker.getMaxAge() : 99
         );
+        return filterByDistance(candidates, seeker);
+    }
 
-        if (!humanCandidates.isEmpty()) {
-            UserEntity partner = humanCandidates.get(0);
-            queueRepository.deleteById(partner.getUserId());
-            queueRepository.deleteById(seeker.getUserId());
-            ChatEntity chat = chatService.createChat(seeker, partner);
-            log.info("Matched user {} with human {} → chat {}", seeker.getUserId(), partner.getUserId(), chat.getChatId());
-            return chatService.getSessionFor(chat.getChatId(), seeker.getUserId());
+    // Fixed-size striped lock pool. Two userIds hashing to the same stripe will serialize,
+    // which is acceptable for matchmaking throughput and avoids unbounded memory growth.
+    private static final int LOCK_STRIPES = 64;
+    private static final Object[] LOCKS;
+    static {
+        LOCKS = new Object[LOCK_STRIPES];
+        for (int i = 0; i < LOCK_STRIPES; i++) LOCKS[i] = new Object();
+    }
+
+    private static Object stripeFor(long userId) {
+        return LOCKS[(int) (Math.floorMod(userId, LOCK_STRIPES))];
+    }
+
+    protected ChatSessionDto matchWithHuman(UserEntity seeker, UserEntity partner) {
+        // Lock on the lower userId first to prevent deadlock if two threads try to match each other
+        long id1 = Math.min(seeker.getUserId(), partner.getUserId());
+        long id2 = Math.max(seeker.getUserId(), partner.getUserId());
+        Object lock1 = stripeFor(id1);
+        Object lock2 = stripeFor(id2);
+        if (lock1 == lock2) {
+            // Same stripe — single lock suffices, avoids self-deadlock on nested synchronized
+            return doMatch(seeker, partner, lock1, null);
         }
+        return doMatch(seeker, partner, lock1, lock2);
+    }
 
-        // Fallback: match with a compatible bot
-        List<UserEntity> bots = userRepository.findCompatibleBots(
-                preferences.preferredGender(),
-                preferences.minAge(),
-                preferences.maxAge(),
-                seeker.getUserId(),
-                seeker.getLatitude(),
-                seeker.getLongitude()
-        );
-
-        if (!bots.isEmpty()) {
-            UserEntity bot = bots.get(ThreadLocalRandom.current().nextInt(bots.size()));
-            ChatEntity chat = chatService.createChat(seeker, bot);
-            log.info("Matched user {} with bot {} → chat {}", seeker.getUserId(), bot.getUserId(), chat.getChatId());
-            queueRepository.deleteById(seeker.getUserId());
-            return chatService.getSessionFor(chat.getChatId(), seeker.getUserId());
+    private ChatSessionDto doMatch(UserEntity seeker, UserEntity partner, Object lock1, Object lock2) {
+        synchronized (lock1) {
+            if (lock2 == null) {
+                return claimAndCreate(seeker, partner);
+            }
+            synchronized (lock2) {
+                return claimAndCreate(seeker, partner);
+            }
         }
+    }
 
-        // Second fallback: any bot ignoring age/gender — ensures matching ALWAYS succeeds
-        List<UserEntity> anyBot = userRepository.findAnyBot(seeker.getUserId(), seeker.getLatitude(), seeker.getLongitude());
-        if (!anyBot.isEmpty()) {
-            UserEntity bot = anyBot.get(ThreadLocalRandom.current().nextInt(anyBot.size()));
-            ChatEntity chat = chatService.createChat(seeker, bot);
-            log.info("Matched user {} with fallback bot {} → chat {}", seeker.getUserId(), bot.getUserId(), chat.getChatId());
-            queueRepository.deleteById(seeker.getUserId());
-            return chatService.getSessionFor(chat.getChatId(), seeker.getUserId());
+    private ChatSessionDto claimAndCreate(UserEntity seeker, UserEntity partner) {
+        boolean seekerInQueue = queueRepository.existsById(seeker.getUserId());
+        boolean partnerInQueue = queueRepository.existsById(partner.getUserId());
+        if (!seekerInQueue || !partnerInQueue) {
+            log.info("Race condition: seeker={} inQueue={}, partner={} inQueue={} — skipping",
+                    seeker.getUserId(), seekerInQueue, partner.getUserId(), partnerInQueue);
+            return null;
         }
+        queueRepository.deleteById(partner.getUserId());
+        queueRepository.deleteById(seeker.getUserId());
+        ChatEntity chat = chatService.createChat(seeker, partner);
+        log.info("Matched user {} with human {} → chat {}", seeker.getUserId(), partner.getUserId(), chat.getChatId());
+        return chatService.getSessionFor(chat.getChatId(), seeker.getUserId());
+    }
 
-        // No bots at all in DB — should not happen if V3 migration ran
-        throw new IllegalStateException("No AI partners available. Please check that the database migration V3 ran successfully.");
+    private List<UserEntity> filterByDistance(List<UserEntity> candidates, UserEntity seeker) {
+        if (seeker.getLatitude() == null || seeker.getLongitude() == null) return candidates;
+        return candidates.stream()
+                .filter(c -> {
+                    if (c.getLatitude() == null || c.getLongitude() == null) return true;
+                    double dist = haversineKm(seeker.getLatitude(), seeker.getLongitude(),
+                            c.getLatitude(), c.getLongitude());
+                    double maxDist = c.getMaxDistanceKm() != null ? c.getMaxDistanceKm() : DEFAULT_MAX_DISTANCE_KM;
+                    return dist <= maxDist;
+                })
+                .toList();
+    }
+
+    private static double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     @Override

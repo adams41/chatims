@@ -48,23 +48,31 @@
           <div class="time text-muted">{{ msg.sendTimestamp | date:'shortTime' }}</div>
         </div>
       }
+      @if (partnerTyping() && !isEnded()) {
+        <div class="message" aria-live="polite">
+          <div class="bubble typing-bubble">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      }
     </div>
-
-    @if (session()?.partnerLiked && !session()?.youLiked) {
-      <div class="liked-banner">
-        💖 Your partner liked you! Like back to reveal contacts.
-      </div>
-    }
 
     @if (isEnded() && !session()?.mutualMatch) {
       <div class="ended-banner">
-        ⏱ Chat ended. No mutual match this time.
+        @if (partnerLeftEarly()) {
+          👋 Your partner decided to move on.
+        } @else {
+          ⏱ Time's up. No mutual match this time.
+        }
         <button class="btn btn-primary" (click)="newSearch()">Find another</button>
       </div>
     }
 
     @if (errorMessage()) {
       <div class="error-banner">{{ errorMessage() }}</div>
+    }
+    @if (connectionLost()) {
+      <div class="error-banner">Connection lost — trying to reconnect…</div>
     }
     @if (searchError()) {
       <div class="error-banner">{{ searchError() }}</div>
@@ -80,6 +88,7 @@
           name="msg"
           placeholder="Type a message..."
           (keydown)="handleKeyDown($event)"
+          (input)="onTyping()"
           rows="1"
         ></textarea>
         <button type="submit" class="btn btn-primary" [disabled]="sending() || !newMessage.trim()">

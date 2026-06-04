@@ -1,12 +1,18 @@
 <app-theme-toggle />
-<a class="back-btn" routerLink="/welcome" title="Back">←</a>
+<a class="back-btn" routerLink="/auth" title="Back">←</a>
 <section class="center-screen">
   <div class="container">
     <div class="card">
       <div class="step-progress">
-        <div class="step" [class.active]="step === 'profile'" [class.done]="step === 'contacts'">1</div>
-        <div class="line" [class.done]="step === 'contacts'"></div>
-        <div class="step" [class.active]="step === 'contacts'">2</div>
+        <div class="step"
+             [class.active]="step === 'profile'"
+             [class.done]="step === 'contacts' || step === 'preferences'">1</div>
+        <div class="line" [class.done]="step === 'contacts' || step === 'preferences'"></div>
+        <div class="step"
+             [class.active]="step === 'contacts'"
+             [class.done]="step === 'preferences'">2</div>
+        <div class="line" [class.done]="step === 'preferences'"></div>
+        <div class="step" [class.active]="step === 'preferences'">3</div>
       </div>
 
       @if (step === 'profile') {
@@ -50,7 +56,7 @@
             @if (isLoading) { <span class="spinner-sm"></span> } @else { Continue }
           </button>
         </form>
-      } @else {
+      } @else if (step === 'contacts') {
         <h2>Where to reach you</h2>
         <p class="text-muted">Add at least one. After a mutual match, only these get revealed.</p>
 
@@ -78,6 +84,44 @@
           </button>
           <button type="button" class="btn btn-ghost" (click)="goBackToProfile()" [disabled]="isLoading">
             ← Change photo / details
+          </button>
+        </form>
+      } @else {
+        <h2>Who do you want to meet?</h2>
+        <p class="text-muted">We'll match you with people who fit. You can change this any time.</p>
+
+        <form [formGroup]="preferencesForm" (ngSubmit)="submitPreferences()" class="stack">
+          <div class="field">
+            <label>Looking for</label>
+            <div class="row">
+              <label class="chip" [class.active]="preferencesForm.value.preferredGender === 'MALE'">
+                <input type="radio" formControlName="preferredGender" value="MALE" hidden /> Men
+              </label>
+              <label class="chip" [class.active]="preferencesForm.value.preferredGender === 'FEMALE'">
+                <input type="radio" formControlName="preferredGender" value="FEMALE" hidden /> Women
+              </label>
+              <label class="chip" [class.active]="preferencesForm.value.preferredGender === 'ANY'">
+                <input type="radio" formControlName="preferredGender" value="ANY" hidden /> Anyone
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Age range</label>
+            <div class="row">
+              <input type="number" formControlName="minAge" min="18" max="120" placeholder="Min" />
+              <span class="text-muted" style="align-self: center;">to</span>
+              <input type="number" formControlName="maxAge" min="18" max="120" placeholder="Max" />
+            </div>
+          </div>
+
+          @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
+
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+            @if (isLoading) { <span class="spinner-sm"></span> } @else { Finish }
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="goBackToContacts()" [disabled]="isLoading">
+            ← Edit contacts
           </button>
         </form>
       }

@@ -48,5 +48,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./profile/profile.component').then(m => m.ProfileComponent),
   },
+  {
+    path: 'impressum',
+    loadComponent: () =>
+      import('./legal/impressum.component').then(m => m.ImpressumComponent),
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () =>
+      import('./legal/privacy-policy.component').then(m => m.PrivacyPolicyComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

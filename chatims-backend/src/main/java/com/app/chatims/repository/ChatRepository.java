@@ -33,4 +33,11 @@ public interface ChatRepository extends JpaRepository<ChatEntity, Long> {
            ORDER BY c.startedAt DESC
            """)
     List<ChatEntity> findMutualMatchesForUser(@Param("userId") Long userId);
+
+    @Query("""
+           SELECT CASE WHEN c.user1Id = :userId THEN c.user2Id ELSE c.user1Id END
+           FROM ChatEntity c
+           WHERE c.user1Id = :userId OR c.user2Id = :userId
+           """)
+    List<Long> findExcludedPartnerIds(@Param("userId") Long userId);
 }

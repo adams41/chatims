@@ -8,6 +8,7 @@ import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.UserService;
 import com.app.chatims.util.Gender;
 import com.app.chatims.util.GeoUtils;
+import com.app.chatims.util.ImageValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -119,18 +120,17 @@ public class UserServiceImpl implements UserService {
 
     private String savePhoto(MultipartFile photo) throws IOException {
         if (photo == null || photo.isEmpty()) return null;
-        String filename = UUID.randomUUID() + "_" + sanitize(photo.getOriginalFilename());
-        Path dir = Paths.get(uploadDir);
+        ImageValidator.ImageType type = ImageValidator.validate(photo);
+        String filename = UUID.randomUUID() + ImageValidator.extensionFor(type);
+        Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(dir);
-        Path target = dir.resolve(filename);
+        Path target = dir.resolve(filename).normalize();
+        if (!target.startsWith(dir)) {
+            throw new IOException("Invalid upload path.");
+        }
         Files.copy(photo.getInputStream(), target);
         log.debug("Saved photo to {}", target);
         return "/uploads/" + filename;
-    }
-
-    private static String sanitize(String filename) {
-        if (filename == null) return "unknown";
-        return filename.replaceAll("[^a-zA-Z0-9.\\-_]", "_");
     }
 
     private static String blankToNull(String s) {

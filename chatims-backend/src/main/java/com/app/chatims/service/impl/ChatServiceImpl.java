@@ -12,6 +12,9 @@ import com.app.chatims.service.ChatService;
 import com.app.chatims.util.ChatStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +27,11 @@ public class ChatServiceImpl implements ChatService {
 
     public static final Duration CHAT_DURATION = Duration.ofMinutes(7);
 
+    private static final Logger log = LoggerFactory.getLogger(ChatServiceImpl.class);
+
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -65,16 +71,8 @@ public class ChatServiceImpl implements ChatService {
         }
         boolean isUser1 = chat.getUser1Id().equals(likerUserId);
         if (isUser1) chat.setUser1Liked(true); else chat.setUser2Liked(true);
-
-        // If the partner is a bot, auto-like back so users can test the match reveal flow
-        Long partnerId = chat.otherParticipant(likerUserId);
-        userRepository.findById(partnerId).ifPresent(partner -> {
-            if (partner.isBot()) {
-                if (isUser1) chat.setUser2Liked(true); else chat.setUser1Liked(true);
-            }
-        });
-
         chatRepository.save(chat);
+        pushSessionToPartner(chat, likerUserId);
         return getSessionFor(chatId, likerUserId);
     }
 
@@ -107,6 +105,7 @@ public class ChatServiceImpl implements ChatService {
             if (chat.involves(userId) && chat.getStatus() == ChatStatus.ACTIVE) {
                 chat.setStatus(ChatStatus.ENDED);
                 chatRepository.save(chat);
+                pushSessionToPartner(chat, userId);
             }
         });
     }
@@ -121,7 +120,29 @@ public class ChatServiceImpl implements ChatService {
         if (chat.getStatus() == ChatStatus.ACTIVE && LocalDateTime.now().isAfter(chat.getEndsAt())) {
             chat.setStatus(ChatStatus.ENDED);
             chatRepository.save(chat);
+            pushSessionToUser(chat, chat.getUser1Id());
+            pushSessionToUser(chat, chat.getUser2Id());
         }
         return chat;
+    }
+
+    private void pushSessionToPartner(ChatEntity chat, Long actingUserId) {
+        pushSessionToUser(chat, chat.otherParticipant(actingUserId));
+    }
+
+    private void pushSessionToUser(ChatEntity chat, Long recipientId) {
+        userRepository.findById(recipientId).ifPresent(recipient -> {
+            UserEntity partner = userRepository.findById(chat.otherParticipant(recipientId))
+                    .orElse(null);
+            if (partner == null) return;
+            boolean isUser1 = chat.getUser1Id().equals(recipientId);
+            ChatSessionDto dto = ChatSessionDto.of(chat, AnonymousPartnerDto.from(partner), isUser1);
+            messagingTemplate.convertAndSendToUser(
+                    recipient.getKeycloakId(),
+                    "/queue/session",
+                    dto
+            );
+            log.debug("Pushed session update for chat {} to userId={}", chat.getChatId(), recipientId);
+        });
     }
 }

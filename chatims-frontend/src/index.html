@@ -10,6 +10,9 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="mat-typography">
+  <!-- sockjs-client references `global` (Node convention) which doesn't exist in
+       browsers. Alias it to `window` before any module loads. -->
+  <script>(function(){if(typeof globalThis.global==='undefined'){globalThis.global=globalThis;}})();</script>
   <app-root></app-root>
 </body>
 </html>

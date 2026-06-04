@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit, inject } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -27,8 +27,10 @@ export class RegisterComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly users = inject(UserApiService);
   private readonly keycloak = inject(KeycloakService);
+  private readonly zone = inject(NgZone);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  step: 'profile' | 'contacts' = 'profile';
+  step: 'profile' | 'contacts' | 'preferences' = 'profile';
   isLoading = false;
   errorMessage: string | null = null;
   existingProfile: UserProfile | null = null;
@@ -51,6 +53,13 @@ export class RegisterComponent implements OnInit {
     },
     { validators: this.atLeastOneContactValidator }
   );
+
+  // Preferences step — 'ANY' is a UI-only sentinel mapped to null when sent to the backend.
+  preferencesForm = this.fb.group({
+    preferredGender: ['ANY', Validators.required],
+    minAge: [18, [Validators.required, Validators.min(18), Validators.max(120)]],
+    maxAge: [60, [Validators.required, Validators.min(18), Validators.max(120)]],
+  });
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -76,13 +85,26 @@ export class RegisterComponent implements OnInit {
             telegramHandle: profile.telegramHandle ?? '',
             viberNumber: profile.viberNumber ?? '',
           });
-          // Only auto-advance to contacts if contacts are not yet filled;
-          // otherwise keep on profile so user can review/change photo
-          if (profile.hasContact) {
+          this.preferencesForm.patchValue({
+            preferredGender: profile.preferredGender ?? 'ANY',
+            minAge: profile.minAge ?? 18,
+            maxAge: profile.maxAge ?? 60,
+          });
+          // Auto-advance based on what's already filled:
+          // - has contacts + prefs set → user is just editing photo, stay on profile step
+          // - has contacts but no prefs → start them on the prefs step
+          // - has only profile → go to contacts
+          if (profile.hasContact && profile.minAge != null && profile.maxAge != null) {
             this.step = 'contacts';
+          } else if (profile.hasContact) {
+            this.step = 'preferences';
           }
         }
       });
+  }
+
+  goBackToContacts(): void {
+    this.step = 'contacts';
   }
 
   goBackToProfile(): void {
@@ -111,7 +133,10 @@ export class RegisterComponent implements OnInit {
     }
     this.selectedFile = file;
     const reader = new FileReader();
-    reader.onload = e => (this.previewUrl = e.target?.result as string);
+    reader.onload = e => this.zone.run(() => {
+      this.previewUrl = e.target?.result as string;
+      this.cdr.markForCheck();
+    });
     reader.readAsDataURL(file);
   }
 
@@ -126,15 +151,17 @@ export class RegisterComponent implements OnInit {
       if (this.selectedFile) {
         this.isLoading = true;
         this.users.uploadPhoto(this.selectedFile).subscribe({
-          next: profile => {
+          next: profile => this.zone.run(() => {
             this.existingProfile = profile;
             this.isLoading = false;
             this.step = 'contacts';
-          },
-          error: err => {
+            this.cdr.markForCheck();
+          }),
+          error: err => this.zone.run(() => {
             this.isLoading = false;
             this.errorMessage = err.error?.message || 'Failed to upload photo.';
-          },
+            this.cdr.markForCheck();
+          }),
         });
       } else {
         // No new photo — just advance
@@ -155,15 +182,17 @@ export class RegisterComponent implements OnInit {
 
     this.isLoading = true;
     this.users.completeProfile(form).subscribe({
-      next: profile => {
+      next: profile => this.zone.run(() => {
         this.existingProfile = profile;
         this.isLoading = false;
         this.step = 'contacts';
-      },
-      error: err => {
+        this.cdr.markForCheck();
+      }),
+      error: err => this.zone.run(() => {
         this.isLoading = false;
         this.errorMessage = err.error?.message || 'Failed to save profile.';
-      },
+        this.cdr.markForCheck();
+      }),
     });
   }
 
@@ -182,14 +211,48 @@ export class RegisterComponent implements OnInit {
         viberNumber: nullable(v.viberNumber),
       })
       .subscribe({
-        next: () => {
+        next: () => this.zone.run(() => {
           this.isLoading = false;
-          this.router.navigate(['/preferences']);
-        },
-        error: err => {
+          this.step = 'preferences';
+          this.cdr.markForCheck();
+        }),
+        error: err => this.zone.run(() => {
           this.isLoading = false;
           this.errorMessage = err.error?.message || 'Failed to save contacts.';
-        },
+          this.cdr.markForCheck();
+        }),
+      });
+  }
+
+  submitPreferences(): void {
+    this.errorMessage = null;
+    const v = this.preferencesForm.value;
+    if (this.preferencesForm.invalid) {
+      this.preferencesForm.markAllAsTouched();
+      return;
+    }
+    if ((v.minAge ?? 0) > (v.maxAge ?? 0)) {
+      this.errorMessage = 'Min age must be less than or equal to max age.';
+      return;
+    }
+    this.isLoading = true;
+    this.users
+      .updatePreferences({
+        preferredGender: v.preferredGender === 'ANY' ? null : (v.preferredGender as 'MALE' | 'FEMALE'),
+        minAge: v.minAge!,
+        maxAge: v.maxAge!,
+      })
+      .subscribe({
+        next: () => this.zone.run(() => {
+          this.isLoading = false;
+          this.router.navigate(['/profile']);
+          this.cdr.markForCheck();
+        }),
+        error: err => this.zone.run(() => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || 'Failed to save preferences.';
+          this.cdr.markForCheck();
+        }),
       });
   }
 

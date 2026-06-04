@@ -29,8 +29,8 @@
 
 .photo-picker { display: flex; flex-direction: column; align-items: center; }
 .photo-picker label {
-  width: 130px;
-  height: 130px;
+  width: clamp(110px, 35vw, 130px);
+  aspect-ratio: 1;
   border-radius: 50%;
   border: 2px dashed var(--color-border);
   display: flex;
@@ -43,6 +43,7 @@
   transition: border-color var(--transition);
 }
 .photo-picker label:hover { border-color: var(--color-primary); }
+.photo-picker label { height: auto; }
 .photo-picker img { width: 100%; height: 100%; object-fit: cover; }
 .photo-picker span { font-size: 2rem; color: var(--color-text-muted); }
 .photo-picker small { color: var(--color-text-muted); font-size: 0.8rem; }
