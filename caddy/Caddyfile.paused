@@ -1,0 +1,18 @@
+{
+    email support@chatims.app
+}
+
+chatims.app, www.chatims.app {
+    root * /killswitch
+    file_server
+    try_files {path} /index.html
+    header Cache-Control "no-store, no-cache, must-revalidate"
+}
+
+api.chatims.app {
+    respond "Service paused" 503
+}
+
+auth.chatims.app {
+    respond "Service paused" 503
+}
