@@ -18,8 +18,8 @@ export class AuthApiService {
     return this.http.post<TokenResponse>(`${this.base}/auth/login`, { username, password });
   }
 
-  register(name: string, email: string, password: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.base}/auth/register`, { name, email, password });
+  register(name: string, email: string, password: string, inviteCode: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/auth/register`, { name, email, password, inviteCode });
   }
 
   refresh(refreshToken: string): Observable<TokenResponse> {

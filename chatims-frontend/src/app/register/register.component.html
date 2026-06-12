@@ -115,6 +115,18 @@
             </div>
           </div>
 
+          <div class="field">
+            <label>What are you looking for?</label>
+            <p class="text-muted small">You'll be matched with people who want the same.</p>
+            <div class="chip-group">
+              @for (opt of intentOptions; track opt.value) {
+                <label class="chip" [class.active]="preferencesForm.value.intent === opt.value">
+                  <input type="radio" formControlName="intent" [value]="opt.value" hidden /> {{ opt.label }}
+                </label>
+              }
+            </div>
+          </div>
+
           @if (errorMessage) { <p class="error">{{ errorMessage }}</p> }
 
           <button type="submit" class="btn btn-primary" [disabled]="isLoading">

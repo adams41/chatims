@@ -1,0 +1,12 @@
+:80 {
+    root * /srv
+    encode gzip
+    try_files {path} /index.html
+    file_server
+
+    @env path /env.js
+    header @env Cache-Control "no-store"
+    header /index.html Cache-Control "no-store"
+    header /*.js Cache-Control "public, max-age=31536000, immutable"
+    header /*.css Cache-Control "public, max-age=31536000, immutable"
+}

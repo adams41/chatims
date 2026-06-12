@@ -99,6 +99,22 @@
 
 .btn-full { width: 100%; margin-top: 0.4rem; }
 
+.age-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #777);
+  cursor: pointer;
+  margin-top: 0.2rem;
+}
+.age-confirm input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary, #4f46e5);
+}
+
 /* Spinner in button */
 .spin {
   display: inline-block;
@@ -128,3 +144,75 @@
 .link-btn:hover { color: var(--color-primary-hover); }
 
 .legal { font-size: 0.72rem; margin-top: 1.2rem; }
+
+.forgot-row {
+  margin: -0.2rem 0 0.4rem;
+  text-align: right;
+  font-size: 0.82rem;
+}
+.forgot-row .link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.forgot-row .link:hover { text-decoration: underline; }
+
+/* Legal modal */
+.legal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.legal-modal {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 14px);
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+}
+.legal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.legal-modal-header h3 { margin: 0; font-size: 1rem; }
+.legal-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+.legal-modal-close:hover { color: var(--color-text); }
+.legal-modal-body {
+  overflow-y: auto;
+  padding: 1rem 1.2rem;
+  flex: 1;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+.legal-modal-body h4 { margin: 1rem 0 0.3rem; font-size: 0.9rem; }
+.legal-modal-body p { margin: 0 0 0.5rem; }
+.legal-modal-body a { color: var(--color-primary); }
+.legal-modal-footer {
+  padding: 0.8rem 1.2rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}

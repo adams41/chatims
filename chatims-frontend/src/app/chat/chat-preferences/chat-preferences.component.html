@@ -8,18 +8,46 @@
     </div>
 
     @if (!isDone) {
-      @if (currentQuestion) {
+      @if (currentQuestion; as q) {
         <div class="question-card">
-          <h2>{{ currentQuestion.text }}</h2>
-          <div class="options">
-            @for (opt of currentQuestion.options; track opt) {
-              <button
-                class="opt-btn"
-                [class.selected]="answers[currentQuestion.key] === opt"
-                (click)="selectOption(opt)"
-              >{{ opt }}</button>
-            }
-          </div>
+          <h2>{{ q.text }}</h2>
+
+          @if (q.key === 'ageRange') {
+            <div class="age-range-picker">
+              <div class="age-range-value">
+                <span class="age-num">{{ minAge() }}</span>
+                <span class="age-dash">–</span>
+                <span class="age-num">{{ maxAge() }}</span>
+              </div>
+              <div class="slider-row">
+                <label>Min</label>
+                <input
+                  type="range" min="18" max="99"
+                  [value]="minAge()"
+                  (input)="onMinAgeChange(($any($event.target)).value)"
+                />
+              </div>
+              <div class="slider-row">
+                <label>Max</label>
+                <input
+                  type="range" min="18" max="99"
+                  [value]="maxAge()"
+                  (input)="onMaxAgeChange(($any($event.target)).value)"
+                />
+              </div>
+              <button class="opt-btn primary" (click)="confirmAgeRange()">Continue</button>
+            </div>
+          } @else {
+            <div class="options">
+              @for (opt of q.options ?? []; track opt) {
+                <button
+                  class="opt-btn"
+                  [class.selected]="answers[q.key] === opt"
+                  (click)="selectOption(opt)"
+                >{{ opt }}</button>
+              }
+            </div>
+          }
         </div>
       }
     } @else {

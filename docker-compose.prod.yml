@@ -1,0 +1,126 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: chatims-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - backend
+      - frontend
+      - keycloak
+    networks:
+      - chatims-net
+
+  frontend:
+    build:
+      context: ./chatims-frontend
+      dockerfile: Dockerfile
+    container_name: chatims-frontend
+    restart: unless-stopped
+    environment:
+      API_URL: "https://api.chatims.app"
+      KEYCLOAK_URL: "https://auth.chatims.app"
+      KEYCLOAK_REALM: "chatims-app"
+      KEYCLOAK_CLIENT_ID: "chatims-client"
+    networks:
+      - chatims-net
+
+  backend:
+    build:
+      context: ./chatims-backend
+      dockerfile: Dockerfile
+    container_name: chatims-backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/chatims
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SERVER_PORT: 8081
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: chatims-app
+      KEYCLOAK_CLIENT_ID: chatims-client
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      CORS_ALLOWED_ORIGINS: "https://chatims.app"
+      FILE_UPLOAD_DIR: /app/uploads
+    volumes:
+      - /var/lib/chatims/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - chatims-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: chatims-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatims
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - chatims-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d chatims"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - chatims-net
+
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: chatims-keycloak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KC_DB_PASSWORD}
+    volumes:
+      - chatims-keycloak-data:/var/lib/postgresql/data
+    networks:
+      - chatims-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: chatims-keycloak
+    restart: unless-stopped
+    command: ["start", "--optimized", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: auth.chatims.app
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_APPEND: "-Xms512m -Xmx896m"
+    depends_on:
+      - keycloak-db
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro
+    networks:
+      - chatims-net
+
+volumes:
+  chatims-postgres-data:
+  chatims-keycloak-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  chatims-net:
+    driver: bridge

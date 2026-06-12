@@ -1,0 +1,118 @@
+<div class="admin-container">
+  <header class="admin-header">
+    <a routerLink="/profile" class="back-link">← Back to profile</a>
+    <h1>Invite codes</h1>
+    <p class="text-muted">Generate, view, and revoke closed-beta invite codes.</p>
+  </header>
+
+  @if (error()) { <div class="banner error">{{ error() }}</div> }
+  @if (copyHint()) { <div class="banner success">{{ copyHint() }}</div> }
+
+  <section class="card">
+    <h2>Generate new codes</h2>
+    <div class="gen-row">
+      <label>
+        <span>How many</span>
+        <input type="number" min="1" max="50" [(ngModel)]="count" />
+      </label>
+      <label>
+        <span>Expires in (days)</span>
+        <input type="number" min="1" max="365" [(ngModel)]="expiresInDays" placeholder="never" />
+      </label>
+      <label class="grow">
+        <span>Note (optional)</span>
+        <input type="text" [(ngModel)]="note" placeholder="e.g. 'for Anna'" />
+      </label>
+      <button class="btn btn-primary" (click)="generate()" [disabled]="generating()">
+        @if (generating()) { Generating… } @else { Generate }
+      </button>
+    </div>
+
+    @if (justGenerated().length > 0) {
+      <div class="just-generated">
+        <div class="just-generated-header">
+          <strong>Just generated — copy these now:</strong>
+          <div class="just-generated-actions">
+            <button class="btn btn-ghost btn-sm" (click)="copyCodes(justGenerated())">Copy codes</button>
+            <button class="btn btn-primary btn-sm" (click)="copyAllMessages(justGenerated())">Copy all as messages</button>
+          </div>
+        </div>
+        <ul>
+          @for (item of justGenerated(); track item.code) {
+            <li class="generated-row">
+              <code>{{ item.code }}</code>
+              <span class="text-muted small">expires {{ expiryLabel(item.expiresAt) }}</span>
+              <button class="btn btn-ghost btn-sm" (click)="copyMessage(item.code, item.expiresAt)">Copy message</button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+
+  <section class="card">
+    <div class="list-header">
+      <h2>All codes <span class="text-muted">({{ unusedCount() }} unused)</span></h2>
+      <div class="filter-tabs">
+        <button [class.active]="filter === 'all'" (click)="filter = 'all'">All</button>
+        <button [class.active]="filter === 'unused'" (click)="filter = 'unused'">Unused</button>
+        <button [class.active]="filter === 'used'" (click)="filter = 'used'">Used</button>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <p class="text-muted">Loading…</p>
+    } @else if (filtered().length === 0) {
+      <p class="text-muted">No codes match.</p>
+    } @else {
+      <table class="invites-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Note</th>
+            <th>Created</th>
+            <th>Expires</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of filtered(); track i.code) {
+            <tr [class.used]="!!i.usedAt">
+              <td><code>{{ i.code }}</code></td>
+              <td>{{ i.note || '—' }}</td>
+              <td>{{ i.createdAt | date:'short' }}</td>
+              <td>
+                @if (!i.expiresAt) {
+                  <span class="text-muted small">never</span>
+                } @else if (isExpired(i.expiresAt)) {
+                  <span class="status expired">expired</span>
+                } @else {
+                  <span class="text-muted small">in {{ expiryLabel(i.expiresAt) }}</span>
+                }
+              </td>
+              <td>
+                @if (i.usedAt) {
+                  <span class="status used">Used {{ i.usedAt | date:'short' }}</span>
+                } @else if (isExpired(i.expiresAt)) {
+                  <span class="status expired">Expired</span>
+                } @else {
+                  <span class="status unused">Available</span>
+                }
+              </td>
+              <td class="actions">
+                @if (!i.usedAt && !isExpired(i.expiresAt)) {
+                  <button class="btn btn-ghost btn-sm" (click)="copyOne(i.code)">Copy code</button>
+                  <button class="btn btn-ghost btn-sm" (click)="copyMessage(i.code, i.expiresAt)">Message</button>
+                  <button class="btn btn-danger btn-sm" (click)="revoke(i.code)">Revoke</button>
+                } @else if (!i.usedAt) {
+                  <button class="btn btn-danger btn-sm" (click)="revoke(i.code)">Revoke</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</div>

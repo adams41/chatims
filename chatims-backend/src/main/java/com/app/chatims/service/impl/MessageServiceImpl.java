@@ -2,15 +2,12 @@ package com.app.chatims.service.impl;
 
 import com.app.chatims.dto.MessageDto;
 import com.app.chatims.entity.ChatEntity;
-import com.app.chatims.entity.MessageEntity;
 import com.app.chatims.exception.ChatNotFoundException;
 import com.app.chatims.exception.MessageSendException;
 import com.app.chatims.repository.ChatRepository;
-import com.app.chatims.repository.MessageRepository;
 import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.MessageService;
 import com.app.chatims.util.ChatStatus;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
+
 
 @Service
 @RequiredArgsConstructor
@@ -27,14 +28,15 @@ public class MessageServiceImpl implements MessageService {
 
     private static final Logger log = LoggerFactory.getLogger(MessageServiceImpl.class);
 
-    private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final ConcurrentHashMap<Long, List<MessageDto>> chatMessages = new ConcurrentHashMap<>();
+    private final AtomicLong messageIdSeq = new AtomicLong(1L);
+
     @Override
-    @Transactional
-    public MessageEntity sendMessage(Long chatId, Long senderId, String content) {
+    public MessageDto sendMessage(Long chatId, Long senderId, String content) {
         ChatEntity chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new ChatNotFoundException("Chat not found: " + chatId));
         if (!chat.involves(senderId)) {
@@ -44,27 +46,23 @@ public class MessageServiceImpl implements MessageService {
             throw new MessageSendException("Chat is not active");
         }
 
-        MessageEntity message = new MessageEntity();
-        message.setChatId(chatId);
-        message.setSenderId(senderId);
-        message.setContent(content);
-        message.setSendTimestamp(LocalDateTime.now());
-        MessageEntity saved = messageRepository.save(message);
-        pushToRecipient(chat, senderId, MessageDto.from(saved));
-        return saved;
+        MessageDto dto = new MessageDto(
+                messageIdSeq.getAndIncrement(),
+                chatId,
+                senderId,
+                content,
+                LocalDateTime.now()
+        );
+        chatMessages.computeIfAbsent(chatId, k -> new CopyOnWriteArrayList<>()).add(dto);
+        pushToRecipient(chat, senderId, dto);
+        return dto;
     }
 
     private void pushToRecipient(ChatEntity chat, Long senderId, MessageDto dto) {
         Long recipientId = chat.otherParticipant(senderId);
-        userRepository.findById(recipientId).ifPresent(recipient -> {
-            messagingTemplate.convertAndSendToUser(
-                    recipient.getKeycloakId(),
-                    "/queue/messages",
-                    dto
-            );
-            log.info("WS push: msg {} → userId={} keycloakId={}",
-                    dto.id(), recipientId, recipient.getKeycloakId());
-        });
+        userRepository.findById(recipientId).ifPresent(recipient ->
+                messagingTemplate.convertAndSendToUser(recipient.getKeycloakId(), "/queue/messages", dto)
+        );
     }
 
     @Override
@@ -74,7 +72,15 @@ public class MessageServiceImpl implements MessageService {
         if (!chat.involves(viewerUserId)) {
             throw new AccessDeniedException("Not a participant of chat " + chatId);
         }
-        return messageRepository.findByChatIdOrderBySendTimestampAsc(chatId)
-                .stream().map(MessageDto::from).toList();
+        List<MessageDto> list = chatMessages.get(chatId);
+        return list == null ? List.of() : List.copyOf(list);
+    }
+
+    @Override
+    public void purgeChat(Long chatId) {
+        List<MessageDto> removed = chatMessages.remove(chatId);
+        if (removed != null && !removed.isEmpty()) {
+            log.debug("Purged {} in-memory messages for ended chat {}", removed.size(), chatId);
+        }
     }
 }

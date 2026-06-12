@@ -49,6 +49,12 @@ export const routes: Routes = [
       import('./profile/profile.component').then(m => m.ProfileComponent),
   },
   {
+    path: 'admin/invites',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./admin/admin-invites.component').then(m => m.AdminInvitesComponent),
+  },
+  {
     path: 'impressum',
     loadComponent: () =>
       import('./legal/impressum.component').then(m => m.ImpressumComponent),
@@ -57,6 +63,16 @@ export const routes: Routes = [
     path: 'privacy-policy',
     loadComponent: () =>
       import('./legal/privacy-policy.component').then(m => m.PrivacyPolicyComponent),
+  },
+  {
+    path: 'terms',
+    loadComponent: () =>
+      import('./legal/terms.component').then(m => m.TermsComponent),
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./auth/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
   { path: '**', redirectTo: '' },
 ];

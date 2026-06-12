@@ -3,6 +3,7 @@ package com.app.chatims.repository;
 import com.app.chatims.entity.MatchmakingQueueEntity;
 import com.app.chatims.entity.UserEntity;
 import com.app.chatims.util.Gender;
+import com.app.chatims.util.Intent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,7 @@ public interface MatchmakingQueueRepository extends JpaRepository<MatchmakingQue
              AND (q.preferredGender IS NULL OR q.preferredGender = :seekerGender)
              AND u.age BETWEEN :seekerMinAge AND :seekerMaxAge
              AND :seekerAge BETWEEN q.minAge AND q.maxAge
+             AND (:seekerIntent IS NULL OR u.intent IS NULL OR u.intent = :seekerIntent)
            ORDER BY q.joinedAt ASC
            """)
     List<UserEntity> findCompatibleCandidates(
@@ -31,6 +33,7 @@ public interface MatchmakingQueueRepository extends JpaRepository<MatchmakingQue
             @Param("seekerPreferredGender") Gender seekerPreferredGender,
             @Param("seekerAge") Integer seekerAge,
             @Param("seekerMinAge") Integer seekerMinAge,
-            @Param("seekerMaxAge") Integer seekerMaxAge
+            @Param("seekerMaxAge") Integer seekerMaxAge,
+            @Param("seekerIntent") Intent seekerIntent
     );
 }

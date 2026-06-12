@@ -1,3 +1,12 @@
+.legal-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0.4rem 0 0.8rem;
+  line-height: 1.5;
+}
+.legal-hint a { color: var(--color-primary); text-decoration: none; }
+.legal-hint a:hover { text-decoration: underline; }
+
 .step-progress {
   display: flex;
   align-items: center;

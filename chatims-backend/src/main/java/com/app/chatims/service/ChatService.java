@@ -18,4 +18,6 @@ public interface ChatService {
     void endIfExpired(Long chatId);
 
     void leaveChat(Long chatId, Long userId);
+
+    RevealedProfileDto shareContacts(Long chatId, Long sharerUserId);
 }

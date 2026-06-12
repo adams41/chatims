@@ -4,6 +4,13 @@
 
     @if (profile(); as p) {
 
+      @if (!emailVerified) {
+        <div class="email-verify-banner">
+          📧 Please verify your email address.
+          <a [href]="accountConsoleUrl()" target="_blank" rel="noopener" class="link">Open account settings →</a>
+        </div>
+      }
+
       <!-- ── Avatar + name ── -->
       <div class="card profile-header-card">
         <div class="photos-row">
@@ -37,6 +44,7 @@
             <p class="text-muted hint">
               {{ p.preferredGender === 'MALE' ? 'Male' : p.preferredGender === 'FEMALE' ? 'Female' : 'Any gender' }} ·
               ages {{ p.minAge ?? '?' }}–{{ p.maxAge ?? '?' }}
+              @if (p.intent) { · for {{ intentLabel(p.intent) }} }
             </p>
           </div>
           <button class="btn btn-ghost btn-sm" (click)="editingPrefs.set(!editingPrefs())">
@@ -69,6 +77,40 @@
         }
       </div>
 
+      <!-- ── Languages ── -->
+      <div class="card section-card">
+        <div class="section-header">
+          <div>
+            <h3>Languages you speak</h3>
+            <p class="text-muted hint">You'll only match with users who share at least one of your languages.</p>
+          </div>
+        </div>
+        <div class="lang-chips">
+          @for (lang of languages(); track lang) {
+            <span class="lang-chip">
+              {{ lang }}
+              <button class="lang-chip-x" (click)="removeLanguage(lang)" aria-label="Remove">×</button>
+            </span>
+          }
+          @if (languages().length === 0) {
+            <span class="text-muted hint">No languages added yet</span>
+          }
+        </div>
+        <div class="distance-row">
+          <select class="distance-input" [(ngModel)]="newLanguage">
+            <option value="">Select a language…</option>
+            @for (lang of availableLanguages(); track lang) {
+              <option [value]="lang">{{ lang }}</option>
+            }
+          </select>
+          <button class="btn btn-primary btn-sm" (click)="addLanguage()" [disabled]="!newLanguage || languages().length >= 10">
+            Add
+          </button>
+        </div>
+        @if (languageStatus() === 'saved') { <p class="hint saved-hint">✓ Languages saved</p> }
+        @if (languageError()) { <p class="field-error">{{ languageError() }}</p> }
+      </div>
+
       <!-- ── Distance filter ── -->
       <div class="card section-card">
         <div class="section-header">
@@ -83,12 +125,25 @@
         </div>
         <div class="distance-row">
           <label class="hint">Max km</label>
-          <input
-            type="number" min="1" max="20000" placeholder="e.g. 50"
-            class="distance-input"
-            [value]="maxDistanceKm() ?? ''"
-            (input)="setDistance(($any($event.target)).value)"
-          />
+          <div class="km-stepper">
+            <button type="button" class="km-btn" (click)="incrementDistance(-1)" [disabled]="(maxDistanceKm() ?? 0) <= 0">−</button>
+            <input
+              #kmInput
+              type="number" min="1" max="500" inputmode="numeric"
+              class="km-value-input"
+              [value]="maxDistanceKm() ?? ''"
+              placeholder="∞"
+              (input)="onDistanceInput(kmInput)"
+            />
+            <button type="button" class="km-btn" (click)="incrementDistance(1)" [disabled]="(maxDistanceKm() ?? 0) >= MAX_DISTANCE_KM">+</button>
+          </div>
+          <button
+            class="btn btn-primary btn-sm"
+            (click)="saveDistance()"
+            [disabled]="locationStatus() === 'capturing'"
+          >
+            Set
+          </button>
           <button
             class="btn btn-ghost btn-sm"
             (click)="captureLocation()"
@@ -111,35 +166,101 @@
         } @else {
           <ul class="matches-list">
             @for (m of matches(); track m.userId) {
-              <li class="match-row">
-                @if (photoUrl(m.photoPath)) {
-                  <img [src]="photoUrl(m.photoPath)" [alt]="m.name" class="match-avatar" />
-                } @else {
-                  <div class="match-avatar placeholder">{{ m.name.charAt(0) }}</div>
-                }
+              <li class="match-row" (click)="openMatchPhotos(m)">
+                <div class="match-avatar-wrap">
+                  @if (photoUrl(m.photoPath)) {
+                    <img [src]="photoUrl(m.photoPath)" [alt]="m.name" class="match-avatar" />
+                  } @else {
+                    <div class="match-avatar placeholder">{{ m.name.charAt(0) }}</div>
+                  }
+                  @if (extraPhotoCount(m) > 0) {
+                    <span class="photo-badge">+{{ extraPhotoCount(m) }}</span>
+                  }
+                </div>
                 <div class="match-info">
-                  <strong>{{ m.name }}, {{ m.age }}</strong>
+                  <strong>
+                    {{ m.name }}, {{ m.age }}
+                    @if (m.intent) { <span class="intent-tag">{{ intentLabel(m.intent) }}</span> }
+                  </strong>
                   <div class="contact-chips">
-                    @if (m.whatsappNumber) {
-                      <span class="contact-badge wa">WA {{ m.whatsappNumber }}</span>
-                    }
-                    @if (m.telegramHandle) {
-                      <span class="contact-badge tg">TG {{ m.telegramHandle }}</span>
-                    }
-                    @if (m.viberNumber) {
-                      <span class="contact-badge vb">Viber {{ m.viberNumber }}</span>
+                    @if (m.contactsRevealed) {
+                      @if (m.whatsappNumber) {
+                        <span class="contact-badge wa">WA {{ m.whatsappNumber }}</span>
+                      }
+                      @if (m.telegramHandle) {
+                        <span class="contact-badge tg">TG {{ m.telegramHandle }}</span>
+                      }
+                      @if (m.viberNumber) {
+                        <span class="contact-badge vb">Viber {{ m.viberNumber }}</span>
+                      }
+                    } @else if (m.youSharedContacts) {
+                      <span class="contact-badge pending">⏳ Waiting for both of you to share</span>
+                    } @else {
+                      <span class="contact-badge pending">🔒 Contacts hidden until you both share</span>
                     }
                   </div>
                 </div>
+                <button class="match-remove" type="button"
+                        (click)="openRemoveMatch(m, $event)"
+                        [disabled]="removingMatchId() === m.userId"
+                        aria-label="Remove match">✕</button>
               </li>
             }
           </ul>
         }
       </div>
 
+      <!-- ── Privacy & data (GDPR) ── -->
+      <div class="card section-card">
+        <h3>Privacy & data</h3>
+        <p class="text-muted hint">
+          Your rights under GDPR: download a copy of your data, or delete your account permanently.
+        </p>
+        <div class="privacy-actions">
+          <button class="btn btn-ghost btn-sm" (click)="exportMyData()" [disabled]="exporting()">
+            {{ exporting() ? 'Preparing…' : 'Download my data' }}
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="openDeleteConfirm()">
+            Delete my account
+          </button>
+        </div>
+        @if (exportError()) { <p class="field-error">{{ exportError() }}</p> }
+      </div>
+
+      @if (showDeleteConfirm()) {
+        <div class="modal-backdrop" (click)="cancelDelete()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <h3>Delete your account?</h3>
+            <p>
+              This will permanently delete your profile, photos, contact info,
+              and remove you from all past matches. <strong>This cannot be undone.</strong>
+            </p>
+            <p class="text-muted hint">Type <strong>DELETE</strong> to confirm.</p>
+            <input
+              type="text"
+              class="confirm-input"
+              [value]="deleteConfirmText()"
+              (input)="onDeleteConfirmInput($any($event.target).value)"
+              placeholder="DELETE"
+              autocomplete="off"
+            />
+            @if (deleteError()) { <p class="field-error">{{ deleteError() }}</p> }
+            <div class="modal-actions">
+              <button class="btn btn-ghost" (click)="cancelDelete()" [disabled]="deleting()">Cancel</button>
+              <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="deleting()">
+                {{ deleting() ? 'Deleting…' : 'Delete forever' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- ── Actions ── -->
       <div class="profile-actions">
         <button class="btn btn-primary" (click)="startChat()">Find a partner</button>
+        @if (isAdmin()) {
+          <a routerLink="/admin/invites" class="btn btn-ghost">Manage invites</a>
+        }
         <button class="btn btn-ghost" (click)="logout()">Logout</button>
       </div>
 
@@ -147,4 +268,39 @@
       <div class="center-screen"><div class="spinner"></div></div>
     }
   </div>
+
+  @if (matchToRemove(); as m) {
+    <div class="modal-backdrop" (click)="cancelRemoveMatch()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Remove match with {{ m.name }}?</h3>
+        <p>
+          {{ m.name }}'s contact info will be removed from your matches —
+          and you'll be removed from theirs too. <strong>This cannot be undone.</strong>
+        </p>
+        @if (removeMatchError()) { <p class="field-error">{{ removeMatchError() }}</p> }
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="cancelRemoveMatch()" [disabled]="removingMatchId() !== null">Cancel</button>
+          <button class="btn btn-danger" (click)="confirmRemoveMatch()" [disabled]="removingMatchId() !== null">
+            {{ removingMatchId() !== null ? 'Removing…' : 'Remove match' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (viewerPhotos(); as photos) {
+    <div class="photo-viewer-backdrop" (click)="closeViewer()">
+      <button class="viewer-close" type="button" (click)="closeViewer(); $event.stopPropagation()" aria-label="Close">✕</button>
+      <img [src]="photoUrl(photos[viewerIndex()])" alt="Photo" class="viewer-img" (click)="$event.stopPropagation()" />
+      @if (photos.length > 1) {
+        <button class="viewer-nav prev" type="button" (click)="prevViewer(); $event.stopPropagation()" aria-label="Previous">‹</button>
+        <button class="viewer-nav next" type="button" (click)="nextViewer(); $event.stopPropagation()" aria-label="Next">›</button>
+        <div class="viewer-dots">
+          @for (_ of photos; track $index) {
+            <span class="dot" [class.active]="viewerIndex() === $index"></span>
+          }
+        </div>
+      }
+    </div>
+  }
 </section>

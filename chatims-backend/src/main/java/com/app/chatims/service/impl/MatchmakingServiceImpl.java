@@ -28,7 +28,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchmakingServiceImpl.class);
     private static final int POLL_INTERVAL_MS = 3000;
-    private static final int POLL_ATTEMPTS = 10; // 30s total window
+    private static final int POLL_ATTEMPTS = 10;
     private static final double EARTH_RADIUS_KM = 6371.0;
     private static final double DEFAULT_MAX_DISTANCE_KM = 100.0;
 
@@ -55,15 +55,13 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         seeker.setPreferredGender(preferences.preferredGender());
         seeker.setMinAge(preferences.minAge());
         seeker.setMaxAge(preferences.maxAge());
+        seeker.setIntent(preferences.intent());
         seeker.setPreferencesSet(true);
         seeker.setLastSeenAt(LocalDateTime.now());
         userRepository.save(seeker);
 
         chatRepository.findActiveChatsForUser(ChatStatus.ACTIVE, seeker.getUserId(), PageRequest.of(0, 10))
-                .forEach(chat -> {
-                    chat.setStatus(ChatStatus.ENDED);
-                    chatRepository.save(chat);
-                });
+                .forEach(chat -> chatService.leaveChat(chat.getChatId(), seeker.getUserId()));
 
         MatchmakingQueueEntity entry = queueRepository.findById(seeker.getUserId())
                 .orElse(new MatchmakingQueueEntity());
@@ -110,8 +108,11 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         return null;
     }
 
+    private static final int REMATCH_COOLDOWN_HOURS = 24;
+
     protected List<UserEntity> findCandidates(UserEntity seeker) {
-        List<Long> excludedPartners = chatRepository.findExcludedPartnerIds(seeker.getUserId());
+        LocalDateTime cooldownSince = LocalDateTime.now().minusHours(REMATCH_COOLDOWN_HOURS);
+        List<Long> excludedPartners = chatRepository.findExcludedPartnerIds(seeker.getUserId(), cooldownSince);
         List<Long> excluded = excludedPartners.isEmpty() ? List.of(-1L) : excludedPartners;
         List<UserEntity> candidates = queueRepository.findCompatibleCandidates(
                 seeker.getUserId(),
@@ -120,13 +121,35 @@ public class MatchmakingServiceImpl implements MatchmakingService {
                 seeker.getPreferredGender(),
                 seeker.getAge(),
                 seeker.getMinAge() != null ? seeker.getMinAge() : 18,
-                seeker.getMaxAge() != null ? seeker.getMaxAge() : 99
+                seeker.getMaxAge() != null ? seeker.getMaxAge() : 99,
+                seeker.getIntent()
         );
-        return filterByDistance(candidates, seeker);
+        return filterByLanguage(filterByDistance(candidates, seeker), seeker);
     }
 
-    // Fixed-size striped lock pool. Two userIds hashing to the same stripe will serialize,
-    // which is acceptable for matchmaking throughput and avoids unbounded memory growth.
+    private List<UserEntity> filterByLanguage(List<UserEntity> candidates, UserEntity seeker) {
+        java.util.Set<String> seekerLangs = parseLangs(seeker.getLanguages());
+        if (seekerLangs.isEmpty()) return candidates;
+        return candidates.stream()
+                .filter(c -> {
+                    java.util.Set<String> cLangs = parseLangs(c.getLanguages());
+                    if (cLangs.isEmpty()) return false;
+                    for (String lang : seekerLangs) if (cLangs.contains(lang)) return true;
+                    return false;
+                })
+                .toList();
+    }
+
+    private java.util.Set<String> parseLangs(String csv) {
+        if (csv == null || csv.isBlank()) return java.util.Set.of();
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (String s : csv.split(",")) {
+            String t = s.trim().toLowerCase();
+            if (!t.isEmpty()) out.add(t);
+        }
+        return out;
+    }
+
     private static final int LOCK_STRIPES = 64;
     private static final Object[] LOCKS;
     static {
@@ -139,13 +162,11 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     }
 
     protected ChatSessionDto matchWithHuman(UserEntity seeker, UserEntity partner) {
-        // Lock on the lower userId first to prevent deadlock if two threads try to match each other
         long id1 = Math.min(seeker.getUserId(), partner.getUserId());
         long id2 = Math.max(seeker.getUserId(), partner.getUserId());
         Object lock1 = stripeFor(id1);
         Object lock2 = stripeFor(id2);
         if (lock1 == lock2) {
-            // Same stripe — single lock suffices, avoids self-deadlock on nested synchronized
             return doMatch(seeker, partner, lock1, null);
         }
         return doMatch(seeker, partner, lock1, lock2);
@@ -204,7 +225,9 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     public void leaveQueue(String keycloakId) {
         UserEntity user = userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + keycloakId));
-        queueRepository.deleteById(user.getUserId());
+        if (queueRepository.existsById(user.getUserId())) {
+            queueRepository.deleteById(user.getUserId());
+        }
     }
 
     private static boolean hasAtLeastOneContact(UserEntity u) {

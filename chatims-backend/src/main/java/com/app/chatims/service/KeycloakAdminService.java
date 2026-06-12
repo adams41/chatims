@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpMethod;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
@@ -91,7 +92,6 @@ public class KeycloakAdminService {
                 "username", email,
                 "email", email,
                 "firstName", name,
-                "lastName", name,   // required by realm profile validation; same as firstName avoids VERIFY_PROFILE block
                 "enabled", true,
                 "emailVerified", true,
                 "credentials", List.of(Map.of(
@@ -103,12 +103,30 @@ public class KeycloakAdminService {
 
         try {
             ResponseEntity<Void> response = restTemplate.postForEntity(url, new HttpEntity<>(userRep, headers), Void.class);
-            log.info("Keycloak user created for email={}, status={}", email, response.getStatusCode());
+            log.info("Keycloak user created, status={}", response.getStatusCode());
         } catch (HttpClientErrorException.Conflict e) {
             throw new IllegalStateException("An account with this email already exists.");
         } catch (HttpClientErrorException e) {
             log.error("Keycloak user creation failed: {}", e.getResponseBodyAsString());
             throw new IllegalStateException("Registration failed: " + e.getStatusCode());
+        }
+    }
+
+    public void deleteUser(String keycloakId) {
+        String adminToken = getAdminToken();
+        String url = keycloakUrl + "/admin/realms/" + realm + "/users/" + keycloakId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(headers), Void.class);
+            log.info("Keycloak user deleted: keycloakId={}", keycloakId);
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Keycloak user not found on delete: keycloakId={}", keycloakId);
+        } catch (HttpClientErrorException e) {
+            log.error("Keycloak user deletion failed: {}", e.getResponseBodyAsString());
+            throw new IllegalStateException("Failed to delete user from Keycloak.");
         }
     }
 

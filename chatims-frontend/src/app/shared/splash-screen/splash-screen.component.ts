@@ -4,11 +4,12 @@ import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { KeycloakService } from '../../core/services/keycloak.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { PwaInstallComponent } from '../pwa-install/pwa-install.component';
 
 @Component({
   selector: 'app-splash-screen',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PwaInstallComponent],
   templateUrl: './splash-screen.component.html',
   styleUrls: ['./splash-screen.component.css'],
 })

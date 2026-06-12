@@ -44,6 +44,12 @@ public class ChatController {
         return ResponseEntity.ok(chatService.getRevealedProfile(chatId, me.getUserId()));
     }
 
+    @PostMapping("/{chatId}/share-contacts")
+    public ResponseEntity<RevealedProfileDto> shareContacts(Authentication auth, @PathVariable Long chatId) {
+        UserEntity me = AuthUtils.currentUser(auth, userRepository);
+        return ResponseEntity.ok(chatService.shareContacts(chatId, me.getUserId()));
+    }
+
     @GetMapping("/{chatId}/messages")
     public ResponseEntity<List<MessageDto>> getMessages(Authentication auth, @PathVariable Long chatId) {
         UserEntity me = AuthUtils.currentUser(auth, userRepository);
@@ -64,7 +70,6 @@ public class ChatController {
             @Valid @RequestBody SendMessageRequest request
     ) {
         UserEntity me = AuthUtils.currentUser(auth, userRepository);
-        var saved = messageService.sendMessage(chatId, me.getUserId(), request.content());
-        return ResponseEntity.ok(MessageDto.from(saved));
+        return ResponseEntity.ok(messageService.sendMessage(chatId, me.getUserId(), request.content()));
     }
 }

@@ -1,31 +1,39 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { Subscription, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Gender, MatchPreferences, RevealedProfile, UserProfile } from '../core/models';
+import { Gender, Intent, MatchPreferences, RevealedProfile, UserProfile } from '../core/models';
+import { AdminApiService } from '../core/services/admin-api.service';
+import { ChatRealtimeService } from '../core/services/chat-realtime.service';
 import { UserApiService } from '../core/services/user-api.service';
 import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.component';
 import { KeycloakService } from '../core/services/keycloak.service';
 
 interface PrefOption { label: string; value: string; }
-interface PrefQuestion { key: 'ageRange' | 'gender'; label: string; options: PrefOption[]; }
+interface PrefQuestion { key: 'ageRange' | 'gender' | 'intent'; label: string; options: PrefOption[]; }
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, ThemeToggleComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ThemeToggleComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   private readonly users = inject(UserApiService);
+  private readonly realtime = inject(ChatRealtimeService);
   private readonly router = inject(Router);
   private readonly keycloak = inject(KeycloakService);
+  private readonly adminApi = inject(AdminApiService);
+
+  private realtimeSub?: Subscription;
 
   profile = signal<UserProfile | null>(null);
   matches = signal<RevealedProfile[]>([]);
   loading = signal(true);
+  isAdmin = signal(false);
 
   // Photos (up to 3). First slot = main photo from profile.
   photoSlots = signal<(string | null)[]>([null, null, null]);
@@ -58,6 +66,16 @@ export class ProfileComponent implements OnInit {
         { label: 'Any', value: "Doesn't matter" },
       ],
     },
+    {
+      key: 'intent',
+      label: "I'm looking for",
+      options: [
+        { label: 'Friendship', value: 'Friendship' },
+        { label: 'Dating', value: 'Dating' },
+        { label: 'Just chat', value: 'Just chat' },
+        { label: 'Networking', value: 'Networking' },
+      ],
+    },
   ];
 
   // Distance / location
@@ -65,20 +83,57 @@ export class ProfileComponent implements OnInit {
   locationStatus = signal<'idle' | 'capturing' | 'saved' | 'error'>('idle');
   locationError = signal<string | null>(null);
 
+  // Languages
+  readonly LANGUAGE_OPTIONS = [
+    'English', 'German', 'French', 'Spanish', 'Italian', 'Portuguese', 'Dutch',
+    'Russian', 'Ukrainian', 'Polish', 'Czech', 'Slovak', 'Hungarian', 'Romanian',
+    'Greek', 'Turkish', 'Arabic', 'Hebrew', 'Persian', 'Hindi', 'Bengali',
+    'Mandarin', 'Cantonese', 'Japanese', 'Korean', 'Vietnamese', 'Thai',
+    'Indonesian', 'Tagalog', 'Swedish', 'Norwegian', 'Danish', 'Finnish',
+    'Bulgarian', 'Serbian', 'Croatian', 'Slovenian', 'Lithuanian', 'Latvian', 'Estonian',
+  ];
+  languages = signal<string[]>([]);
+  newLanguage = '';
+  languageStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  languageError = signal<string | null>(null);
+  availableLanguages = computed(() => {
+    const selected = new Set(this.languages().map(l => l.toLowerCase()));
+    return this.LANGUAGE_OPTIONS.filter(l => !selected.has(l.toLowerCase()));
+  });
+
+  viewerPhotos = signal<string[] | null>(null);
+  viewerIndex = signal(0);
+
+  removingMatchId = signal<number | null>(null);
+  removeMatchError = signal<string | null>(null);
+  matchToRemove = signal<RevealedProfile | null>(null);
+
+  exporting = signal(false);
+  exportError = signal<string | null>(null);
+  showDeleteConfirm = signal(false);
+  deleteConfirmText = signal('');
+  deleting = signal(false);
+  deleteError = signal<string | null>(null);
+
   ngOnInit(): void {
+    this.realtime.connect();
+    this.realtimeSub = this.realtime.matchRemoved().subscribe(evt => {
+      this.matches.update(list => list.filter(m => m.userId !== evt.partnerId));
+    });
     this.users.me().pipe(catchError(() => of(null))).subscribe(p => {
       this.profile.set(p);
       if (!p) { this.router.navigate(['/auth']); return; }
       this.maxDistanceKm.set(p.maxDistanceKm ?? null);
-      // Slot 0 = backend photo; slots 1-2 persisted in localStorage
-      const url = this.photoUrl(p.photoPath);
-      const extras = this.loadExtraPhotos(String(p.id));
-      this.photoSlots.set([url, extras[0] ?? null, extras[1] ?? null]);
+      this.languages.set(p.languages ?? []);
+      this.applyPhotosFromProfile(p);
       this.prefAnswers.set(this.prefsFromProfile(p));
     });
     this.users.getMatches().pipe(catchError(() => of([] as RevealedProfile[]))).subscribe(m => {
       this.matches.set(m);
       this.loading.set(false);
+    });
+    this.adminApi.amIAdmin().pipe(catchError(() => of({ admin: false }))).subscribe(r => {
+      this.isAdmin.set(!!r.admin);
     });
   }
 
@@ -92,67 +147,108 @@ export class ProfileComponent implements OnInit {
   onPhotoChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    // Reset input so the same file can be re-selected after removal
     input.value = '';
     this.photoError.set(null);
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { this.photoError.set('Photo too large (max 5MB).'); return; }
 
-    // Find first empty slot
-    const slots = [...this.photoSlots()];
-    const emptyIdx = slots.findIndex(s => s === null);
-    if (emptyIdx === -1) return;
+    const slots = this.photoSlots();
+    if (!slots.some(s => s === null)) return;
 
     this.uploadingPhoto.set(true);
-    // Only slot 0 is persisted to the backend (single-photo API).
-    // Slots 1-2 are local previews until multi-photo backend support is added.
-    if (emptyIdx === 0) {
-      this.users.uploadPhoto(file).subscribe({
-        next: p => {
-          this.profile.set(p);
-          const url = this.photoUrl(p.photoPath);
-          slots[0] = url;
-          this.photoSlots.set([...slots]);
-          this.uploadingPhoto.set(false);
-        },
-        error: err => {
-          this.uploadingPhoto.set(false);
-          this.photoError.set(err?.error?.message || 'Upload failed.');
-        },
-      });
-    } else {
-      const reader = new FileReader();
-      reader.onload = e => {
-        slots[emptyIdx] = e.target?.result as string;
-        this.photoSlots.set([...slots]);
-        this.saveExtraPhotos(slots);
+    this.users.addPhoto(file).subscribe({
+      next: p => {
+        this.profile.set(p);
+        this.applyPhotosFromProfile(p);
         this.uploadingPhoto.set(false);
-      };
-      reader.readAsDataURL(file);
-    }
+      },
+      error: err => {
+        this.uploadingPhoto.set(false);
+        this.photoError.set(err?.error?.message || 'Upload failed.');
+      },
+    });
   }
 
   removePhoto(index: number): void {
-    const slots = [...this.photoSlots()];
-    slots[index] = null;
-    const compacted: (string | null)[] = slots.filter(Boolean) as string[];
-    while (compacted.length < 3) compacted.push(null);
-    this.photoSlots.set(compacted);
-    this.saveExtraPhotos(compacted);
+    this.photoError.set(null);
+    this.users.removePhotoAt(index).subscribe({
+      next: p => {
+        this.profile.set(p);
+        this.applyPhotosFromProfile(p);
+      },
+      error: err => this.photoError.set(err?.error?.message || 'Failed to remove photo.'),
+    });
   }
 
-  private loadExtraPhotos(userId: string): (string | null)[] {
-    try {
-      const raw = localStorage.getItem(`chatims_photos_${userId}`);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
+  matchPhotos(m: RevealedProfile): string[] {
+    return (m.photos && m.photos.length > 0) ? m.photos : (m.photoPath ? [m.photoPath] : []);
   }
 
-  private saveExtraPhotos(slots: (string | null)[]): void {
-    const userId = String(this.profile()?.id ?? '');
-    if (!userId) return;
-    // Only save slots 1 and 2 (slot 0 is the backend photo)
-    localStorage.setItem(`chatims_photos_${userId}`, JSON.stringify([slots[1] ?? null, slots[2] ?? null]));
+  extraPhotoCount(m: RevealedProfile): number {
+    return Math.max(0, this.matchPhotos(m).length - 1);
+  }
+
+  ngOnDestroy(): void {
+    this.realtimeSub?.unsubscribe();
+  }
+
+  openRemoveMatch(m: RevealedProfile, ev?: Event): void {
+    ev?.stopPropagation();
+    this.removeMatchError.set(null);
+    this.matchToRemove.set(m);
+  }
+
+  cancelRemoveMatch(): void {
+    this.matchToRemove.set(null);
+    this.removeMatchError.set(null);
+  }
+
+  confirmRemoveMatch(): void {
+    const m = this.matchToRemove();
+    if (!m) return;
+    this.removingMatchId.set(m.userId);
+    this.removeMatchError.set(null);
+    this.users.removeMatch(m.userId).subscribe({
+      next: () => {
+        this.matches.update(list => list.filter(x => x.userId !== m.userId));
+        this.matchToRemove.set(null);
+        this.removingMatchId.set(null);
+      },
+      error: err => {
+        this.removingMatchId.set(null);
+        this.removeMatchError.set(err?.error?.message || 'Failed to remove match.');
+      },
+    });
+  }
+
+  openMatchPhotos(m: RevealedProfile): void {
+    const photos = this.matchPhotos(m);
+    if (photos.length === 0) return;
+    this.viewerPhotos.set(photos);
+    this.viewerIndex.set(0);
+  }
+
+  closeViewer(): void {
+    this.viewerPhotos.set(null);
+  }
+
+  nextViewer(): void {
+    const photos = this.viewerPhotos();
+    if (!photos || photos.length < 2) return;
+    this.viewerIndex.update(i => (i + 1) % photos.length);
+  }
+
+  prevViewer(): void {
+    const photos = this.viewerPhotos();
+    if (!photos || photos.length < 2) return;
+    this.viewerIndex.update(i => (i - 1 + photos.length) % photos.length);
+  }
+
+  private applyPhotosFromProfile(p: UserProfile): void {
+    const urls = (p.photos ?? []).map(path => this.photoUrl(path));
+    const slots: (string | null)[] = [null, null, null];
+    urls.slice(0, 3).forEach((u, i) => slots[i] = u);
+    this.photoSlots.set(slots);
   }
 
   // ── Preferences ─────────────────────────────────────────────────────────
@@ -215,10 +311,155 @@ export class ProfileComponent implements OnInit {
     this.maxDistanceKm.set(Number.isFinite(n) && n > 0 ? n : null);
   }
 
+  addLanguage(): void {
+    const lang = this.newLanguage;
+    if (!lang) return;
+    const current = this.languages();
+    if (current.length >= 10) return;
+    if (current.some(l => l.toLowerCase() === lang.toLowerCase())) {
+      this.newLanguage = '';
+      return;
+    }
+    this.persistLanguages([...current, lang]);
+    this.newLanguage = '';
+  }
+
+  removeLanguage(lang: string): void {
+    const updated = this.languages().filter(l => l !== lang);
+    this.persistLanguages(updated);
+  }
+
+  private persistLanguages(list: string[]): void {
+    this.languageStatus.set('saving');
+    this.languageError.set(null);
+    this.users.updateLanguages(list).subscribe({
+      next: p => {
+        this.profile.set(p);
+        this.languages.set(p.languages ?? []);
+        this.languageStatus.set('saved');
+      },
+      error: err => {
+        this.languageStatus.set('error');
+        this.languageError.set(err?.error?.message || 'Failed to save languages.');
+      },
+    });
+  }
+
+  saveDistance(): void {
+    const p = this.profile();
+    if (!p) return;
+    const dist = this.maxDistanceKm();
+    this.locationStatus.set('capturing');
+    this.locationError.set(null);
+    this.users.updateLocation({
+      latitude: p.latitude ?? null,
+      longitude: p.longitude ?? null,
+      maxDistanceKm: dist != null && dist > 0 ? dist : null,
+    }).subscribe({
+      next: updated => { this.profile.set(updated); this.locationStatus.set('saved'); },
+      error: err => {
+        this.locationStatus.set('error');
+        this.locationError.set(err?.error?.message || 'Failed to save distance.');
+      },
+    });
+  }
+
+  readonly MAX_DISTANCE_KM = 500;
+
+  incrementDistance(step: number): void {
+    const current = this.maxDistanceKm() ?? 0;
+    const next = Math.max(0, Math.min(this.MAX_DISTANCE_KM, current + step));
+    this.maxDistanceKm.set(next === 0 ? null : next);
+  }
+
+  onDistanceInput(input: HTMLInputElement): void {
+    const trimmed = (input.value ?? '').trim().replace(/^-+/, '');
+    if (trimmed === '' || trimmed === '0') {
+      this.maxDistanceKm.set(null);
+      input.value = '';
+      return;
+    }
+    const n = Math.floor(Math.abs(Number(trimmed)));
+    if (!Number.isFinite(n) || n <= 0) {
+      this.maxDistanceKm.set(null);
+      input.value = '';
+      return;
+    }
+    const clamped = Math.min(this.MAX_DISTANCE_KM, n);
+    this.maxDistanceKm.set(clamped);
+    if (n > this.MAX_DISTANCE_KM) input.value = String(clamped);
+  }
+
   // ── Navigation ──────────────────────────────────────────────────────────
 
   startChat(): void { this.router.navigate(['/matchmaking']); }
   logout(): void { this.keycloak.logout(); }
+
+  // ── Data privacy (GDPR) ────────────────────────────────────────────────
+
+  exportMyData(): void {
+    this.exporting.set(true);
+    this.exportError.set(null);
+    this.users.exportMyData().subscribe({
+      next: response => {
+        const blob = response.body;
+        if (!blob) {
+          this.exporting.set(false);
+          this.exportError.set('Empty response.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chatims-data-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.exporting.set(false);
+      },
+      error: err => {
+        this.exporting.set(false);
+        this.exportError.set(err?.error?.message || 'Failed to export your data.');
+      },
+    });
+  }
+
+  openDeleteConfirm(): void {
+    this.deleteConfirmText.set('');
+    this.deleteError.set(null);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deleteConfirmText.set('');
+    this.deleteError.set(null);
+  }
+
+  onDeleteConfirmInput(value: string): void {
+    this.deleteConfirmText.set(value);
+  }
+
+  confirmDelete(): void {
+    if (this.deleteConfirmText().trim().toUpperCase() !== 'DELETE') {
+      this.deleteError.set('Type DELETE to confirm.');
+      return;
+    }
+    this.deleting.set(true);
+    this.deleteError.set(null);
+    this.users.deleteAccount().subscribe({
+      next: () => {
+        const userId = String(this.profile()?.id ?? '');
+        if (userId) localStorage.removeItem(`chatims_photos_${userId}`);
+        this.keycloak.logout();
+      },
+      error: err => {
+        this.deleting.set(false);
+        this.deleteError.set(err?.error?.message || 'Failed to delete your account.');
+      },
+    });
+  }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -232,7 +473,31 @@ export class ProfileComponent implements OnInit {
     let gender = "Doesn't matter";
     if (p.preferredGender === 'MALE') gender = 'Male';
     else if (p.preferredGender === 'FEMALE') gender = 'Female';
-    return { ageRange, gender };
+    const intent = this.labelFromIntent(p.intent) ?? '';
+    return { ageRange, gender, intent };
+  }
+
+  intentLabel(i: Intent | null): string {
+    return this.labelFromIntent(i) ?? '';
+  }
+
+  get emailVerified(): boolean {
+    return this.keycloak.emailVerified;
+  }
+
+  accountConsoleUrl(): string {
+    const kc = environment.keycloak;
+    return `${kc.url}/realms/${kc.realm}/account/`;
+  }
+
+  private labelFromIntent(i: Intent | null): string | null {
+    switch (i) {
+      case 'FRIENDSHIP': return 'Friendship';
+      case 'DATING': return 'Dating';
+      case 'JUST_CHAT': return 'Just chat';
+      case 'NETWORKING': return 'Networking';
+      default: return null;
+    }
   }
 
   private buildPrefs(): MatchPreferences {
@@ -246,6 +511,17 @@ export class ProfileComponent implements OnInit {
     let preferredGender: Gender | null = null;
     if (gender === 'Male') preferredGender = 'MALE';
     else if (gender === 'Female') preferredGender = 'FEMALE';
-    return { preferredGender, minAge, maxAge };
+    const intent = this.intentFromLabel(a['intent']);
+    return { preferredGender, minAge, maxAge, intent };
+  }
+
+  private intentFromLabel(label: string | undefined): Intent | null {
+    switch (label) {
+      case 'Friendship': return 'FRIENDSHIP';
+      case 'Dating': return 'DATING';
+      case 'Just chat': return 'JUST_CHAT';
+      case 'Networking': return 'NETWORKING';
+      default: return null;
+    }
   }
 }

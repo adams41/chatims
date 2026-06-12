@@ -1,5 +1,13 @@
 export type Gender = 'MALE' | 'FEMALE';
 export type ChatStatus = 'ACTIVE' | 'ENDED';
+export type Intent = 'FRIENDSHIP' | 'DATING' | 'JUST_CHAT' | 'NETWORKING';
+
+export const INTENT_LABELS: Record<Intent, string> = {
+  FRIENDSHIP: 'Friendship',
+  DATING: 'Dating',
+  JUST_CHAT: 'Just chat',
+  NETWORKING: 'Networking',
+};
 
 export interface UserProfile {
   id: number;
@@ -9,6 +17,7 @@ export interface UserProfile {
   age: number;
   gender: Gender;
   photoPath: string | null;
+  photos: string[];
   preferencesSet: boolean;
   whatsappNumber: string | null;
   telegramHandle: string | null;
@@ -16,15 +25,18 @@ export interface UserProfile {
   preferredGender: Gender | null;
   minAge: number | null;
   maxAge: number | null;
+  intent: Intent | null;
+  theme: 'dark' | 'light' | null;
   hasContact: boolean;
   latitude?: number | null;
   longitude?: number | null;
+  languages?: string[];
   maxDistanceKm?: number | null;
 }
 
 export interface UpdateLocationRequest {
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   maxDistanceKm: number | null;
 }
 
@@ -33,6 +45,7 @@ export interface AnonymousPartner {
   displayName: string;
   age: number;
   gender: Gender;
+  intent: Intent | null;
 }
 
 export interface ChatSession {
@@ -61,15 +74,21 @@ export interface RevealedProfile {
   age: number;
   gender: Gender;
   photoPath: string | null;
+  photos: string[];
+  intent: Intent | null;
   whatsappNumber: string | null;
   telegramHandle: string | null;
   viberNumber: string | null;
+  youSharedContacts: boolean;
+  partnerSharedContacts: boolean;
+  contactsRevealed: boolean;
 }
 
 export interface MatchPreferences {
   preferredGender: Gender | null;
   minAge: number;
   maxAge: number;
+  intent: Intent | null;
 }
 
 export interface UpdateContactsRequest {

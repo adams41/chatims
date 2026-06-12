@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+keycloak/import/*.json
 
 # Local file uploads
 uploads/

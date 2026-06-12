@@ -1,6 +1,7 @@
 package com.app.chatims.entity;
 
 import com.app.chatims.util.Gender;
+import com.app.chatims.util.Intent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -56,10 +57,18 @@ public class UserEntity {
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
 
-    // Geolocation (nullable; user opts in by sharing browser location).
     private Double latitude;
     private Double longitude;
 
     @Column(name = "max_distance_km")
     private Integer maxDistanceKm;
+
+    @Enumerated(EnumType.STRING)
+    private Intent intent;
+
+    @Column(length = 8)
+    private String theme;
+
+    @Column(length = 200)
+    private String languages;
 }

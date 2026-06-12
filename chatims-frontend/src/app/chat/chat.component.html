@@ -1,17 +1,25 @@
-<a class="profile-fab" routerLink="/profile" title="My Profile">👤</a>
+<a class="profile-fab" (click)="goToProfile()" title="My Profile">👤</a>
 <app-theme-toggle />
-<section class="chat-screen">
+<section class="chat-screen"
+  (touchstart)="onTouchStart($event)"
+  (touchmove)="onTouchMove($event)"
+  (touchend)="onTouchEnd($event)">
   <header class="chat-header">
     <div class="partner-info">
       <div class="avatar">{{ session()?.partner?.displayName?.charAt(0) || '?' }}</div>
       <div>
         <strong>{{ session()?.partner?.displayName || 'Partner' }}</strong>
-        <div class="text-muted small">{{ session()?.partner?.age }} · {{ session()?.partner?.gender?.toLowerCase() }}</div>
+        <div class="text-muted small">
+          {{ session()?.partner?.age }} · {{ session()?.partner?.gender?.toLowerCase() }}
+          @if (session()?.partner?.intent; as i) {
+            · <span class="intent-tag">{{ intentLabel(i) }}</span>
+          }
+        </div>
       </div>
     </div>
 
     <div class="timer" [class.warning]="(session()?.remainingSeconds ?? 999) < 60">
-      ⏱ {{ remainingDisplay() }}
+      <span class="timer-text">{{ remainingDisplay() }}</span>
     </div>
 
     <div class="header-actions">
@@ -24,14 +32,18 @@
       >
         @if (session()?.youLiked) { ❤️ } @else { 🤍 }
       </button>
-      <button class="btn btn-ghost skip-btn" (click)="skipPartner()" title="Find a new partner">
-        ⏭ Skip
+      <button class="btn btn-ghost skip-btn report-btn" (click)="openReport()" title="Report user" [disabled]="isEnded()">
+        Report
       </button>
       <button class="btn btn-ghost skip-btn" (click)="logout()" title="Logout">
         🚪 Logout
       </button>
     </div>
   </header>
+
+  <button class="skip-fab" (click)="skipPartner()" title="Skip to next partner" aria-label="Skip to next partner">
+    →
+  </button>
 
   @if (loadingChat()) {
     <div class="center-content"><div class="spinner"></div></div>
@@ -107,33 +119,117 @@
       </div>
       <div class="card reveal-card">
         <div class="match-burst">💖 It's a match!</div>
-        @if (r.photoPath) {
-          <img class="reveal-photo" [src]="photoUrl(r.photoPath)" alt="{{ r.name }}" />
-        } @else {
-          <div class="reveal-photo placeholder">{{ r.name.charAt(0) }}</div>
-        }
-        <h2>{{ r.name }}, {{ r.age }}</h2>
-        <p class="text-muted">Contact them:</p>
-        <div class="contacts">
-          @if (r.whatsappNumber) {
-            <div class="contact-row">
-              <span class="ico wa">W</span> WhatsApp: <strong>{{ r.whatsappNumber }}</strong>
-            </div>
+        <div class="reveal-photo-wrap" (click)="openRevealPhotos(r)">
+          @if (r.photoPath) {
+            <img class="reveal-photo" [src]="photoUrl(r.photoPath)" alt="{{ r.name }}" />
+          } @else {
+            <div class="reveal-photo placeholder">{{ r.name.charAt(0) }}</div>
           }
-          @if (r.telegramHandle) {
-            <div class="contact-row">
-              <span class="ico tg">T</span> Telegram: <strong>{{ r.telegramHandle }}</strong>
-            </div>
-          }
-          @if (r.viberNumber) {
-            <div class="contact-row">
-              <span class="ico vb">V</span> Viber: <strong>{{ r.viberNumber }}</strong>
-            </div>
+          @if (r.photos && r.photos.length > 1) {
+            <span class="photo-badge">+{{ r.photos.length - 1 }}</span>
           }
         </div>
+        <h2>{{ r.name }}, {{ r.age }}</h2>
+        @if (r.intent) {
+          <p class="text-muted small">Looking for <strong>{{ intentLabel(r.intent) }}</strong></p>
+        }
+        @if (r.contactsRevealed) {
+          <p class="text-muted">Contact them:</p>
+          <div class="contacts">
+            @if (r.whatsappNumber) {
+              <div class="contact-row">
+                <span class="ico wa">W</span> WhatsApp: <strong>{{ r.whatsappNumber }}</strong>
+              </div>
+            }
+            @if (r.telegramHandle) {
+              <div class="contact-row">
+                <span class="ico tg">T</span> Telegram: <strong>{{ r.telegramHandle }}</strong>
+              </div>
+            }
+            @if (r.viberNumber) {
+              <div class="contact-row">
+                <span class="ico vb">V</span> Viber: <strong>{{ r.viberNumber }}</strong>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="share-contacts-gate">
+            @if (r.youSharedContacts) {
+              <p class="text-muted">⏳ Waiting for both of you to share contacts…</p>
+            } @else {
+              <p class="text-muted">Want to exchange contacts? You'll only see each other's contacts when both of you have shared.</p>
+              <button class="btn btn-primary" (click)="shareContacts()" [disabled]="sharingContacts()">
+                {{ sharingContacts() ? 'Sharing…' : 'Share my contacts' }}
+              </button>
+            }
+          </div>
+        }
         <div class="reveal-actions">
           <button class="btn btn-primary" (click)="newSearch()">Start a new chat</button>
           <a class="btn btn-ghost" routerLink="/profile">View matches</a>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (viewerPhotos(); as photos) {
+    <div class="photo-viewer-backdrop" (click)="closeViewer()">
+      <button class="viewer-close" type="button" (click)="closeViewer(); $event.stopPropagation()" aria-label="Close">✕</button>
+      <img [src]="photoUrl(photos[viewerIndex()])" alt="Photo" class="viewer-img" (click)="$event.stopPropagation()" />
+      @if (photos.length > 1) {
+        <button class="viewer-nav prev" type="button" (click)="prevViewer(); $event.stopPropagation()" aria-label="Previous">‹</button>
+        <button class="viewer-nav next" type="button" (click)="nextViewer(); $event.stopPropagation()" aria-label="Next">›</button>
+        <div class="viewer-dots">
+          @for (_ of photos; track $index) {
+            <span class="dot" [class.active]="viewerIndex() === $index"></span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (showReportModal()) {
+    <div class="modal-backdrop" (click)="closeReport()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Report this user</h3>
+        <select [(ngModel)]="reportReason" name="reportReason" class="report-select">
+          <option value="">Select a reason…</option>
+          <option value="spam">Spam</option>
+          <option value="harassment">Harassment</option>
+          <option value="inappropriate">Inappropriate content</option>
+          <option value="underage">Suspected underage user</option>
+          <option value="fake_profile">Fake profile</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea
+          [(ngModel)]="reportDetails"
+          name="reportDetails"
+          placeholder="Optional details…"
+          rows="3"
+          class="report-details"
+        ></textarea>
+        @if (reportError()) {
+          <div class="error-banner">{{ reportError() }}</div>
+        }
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="closeReport()">Cancel</button>
+          <button class="btn btn-danger" (click)="submitReport()" [disabled]="!reportReason || reporting()">Report</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showLeaveConfirm()) {
+    <div class="modal-backdrop" (click)="cancelLeave()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Leave this chat?</h3>
+        <p>
+          Your current chat partner will be skipped and the conversation will end.
+          You can't come back to this chat.
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="cancelLeave()">Stay</button>
+          <button class="btn btn-danger" (click)="confirmLeave()">Leave chat</button>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ import { Router, RouterModule } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { KeycloakService } from '../core/services/keycloak.service';
 import { UserApiService } from '../core/services/user-api.service';
-import { UserProfile } from '../core/models';
+import { Intent, UserProfile } from '../core/models';
 import { environment } from '../../environments/environment';
 import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.component';
 
@@ -59,7 +59,15 @@ export class RegisterComponent implements OnInit {
     preferredGender: ['ANY', Validators.required],
     minAge: [18, [Validators.required, Validators.min(18), Validators.max(120)]],
     maxAge: [60, [Validators.required, Validators.min(18), Validators.max(120)]],
+    intent: ['' as Intent | '', Validators.required],
   });
+
+  readonly intentOptions: { value: Intent; label: string }[] = [
+    { value: 'FRIENDSHIP', label: 'Friendship' },
+    { value: 'DATING', label: 'Dating' },
+    { value: 'JUST_CHAT', label: 'Just chat' },
+    { value: 'NETWORKING', label: 'Networking' },
+  ];
 
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
   private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -241,6 +249,7 @@ export class RegisterComponent implements OnInit {
         preferredGender: v.preferredGender === 'ANY' ? null : (v.preferredGender as 'MALE' | 'FEMALE'),
         minAge: v.minAge!,
         maxAge: v.maxAge!,
+        intent: (v.intent || null) as Intent | null,
       })
       .subscribe({
         next: () => this.zone.run(() => {

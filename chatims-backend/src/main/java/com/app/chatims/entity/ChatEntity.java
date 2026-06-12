@@ -39,8 +39,21 @@ public class ChatEntity {
     @Column(name = "user2_liked", nullable = false)
     private boolean user2Liked;
 
+    @Column(name = "match_removed_at")
+    private LocalDateTime matchRemovedAt;
+
+    @Column(name = "user1_shared_contacts", nullable = false)
+    private boolean user1SharedContacts;
+
+    @Column(name = "user2_shared_contacts", nullable = false)
+    private boolean user2SharedContacts;
+
     public boolean isMutualMatch() {
         return user1Liked && user2Liked;
+    }
+
+    public boolean isMutualContactShare() {
+        return user1SharedContacts && user2SharedContacts;
     }
 
     public boolean involves(Long userId) {

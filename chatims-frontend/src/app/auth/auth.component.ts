@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { marked } from 'marked';
 import { AuthApiService } from '../core/services/auth-api.service';
 import { KeycloakService } from '../core/services/keycloak.service';
 import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.component';
@@ -20,11 +22,14 @@ export class AuthComponent {
   private readonly authApi = inject(AuthApiService);
   private readonly keycloak = inject(KeycloakService);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
 
   tab = signal<Tab>('login');
   loading = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+  legalModal = signal<'terms' | 'privacy' | null>(null);
+  legalContent = signal<string>('');
 
   loginForm = this.fb.group({
     username: ['', [Validators.required, Validators.email]],
@@ -36,7 +41,11 @@ export class AuthComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     confirm: ['', Validators.required],
+    inviteCode: ['', [Validators.required, Validators.minLength(4)]],
+    ageConfirm: [false, Validators.requiredTrue],
+    termsConfirm: [false, Validators.requiredTrue],
   });
+
 
   switchTab(t: Tab): void {
     this.tab.set(t);
@@ -70,7 +79,7 @@ export class AuthComponent {
     }
     this.loading.set(true);
     this.error.set(null);
-    this.authApi.register(v.name!, v.email!, v.password!).subscribe({
+    this.authApi.register(v.name!, v.email!, v.password!, v.inviteCode!.trim().toUpperCase()).subscribe({
       next: () => {
         // Brief delay so Keycloak finishes indexing the new user before ROPC login
         setTimeout(() => {
@@ -91,6 +100,15 @@ export class AuthComponent {
         this.loading.set(false);
         this.error.set(err.error?.message || 'Registration failed.');
       },
+    });
+  }
+
+  openLegalModal(type: 'terms' | 'privacy'): void {
+    this.legalContent.set('');
+    this.legalModal.set(type);
+    const file = type === 'terms' ? 'terms.md' : 'privacy-policy.md';
+    this.http.get(`/legal/${file}`, { responseType: 'text' }).subscribe(md => {
+      this.legalContent.set(marked(md) as string);
     });
   }
 

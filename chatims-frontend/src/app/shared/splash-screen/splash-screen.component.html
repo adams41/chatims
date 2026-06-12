@@ -50,15 +50,21 @@
       <span class="btn-icon">💬</span>
       <span class="start-text">Let's chat!</span>
     </button>
+    <div class="age-badge">18+</div>
+    <div class="beta-badge">Closed beta — invite only</div>
   } @else {
     <div class="spinner"></div>
   }
 
+  <app-pwa-install />
+
   <!-- Legal footer -->
   <footer class="legal-footer">
-    <a routerLink="/impressum">Impressum</a>
+    <a routerLink="/impressum">Imprint</a>
     <span>·</span>
-    <a routerLink="/privacy-policy">Privacy Policy</a>
+    <a routerLink="/privacy-policy">Privacy</a>
+    <span>·</span>
+    <a routerLink="/terms">Terms</a>
   </footer>
 
 </div>

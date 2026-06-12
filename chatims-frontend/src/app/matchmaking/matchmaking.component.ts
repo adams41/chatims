@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription, catchError, of, switchMap } from 'rxjs';
+import { ChatRealtimeService } from '../core/services/chat-realtime.service';
 import { MatchmakingApiService } from '../core/services/matchmaking-api.service';
 import { UserApiService } from '../core/services/user-api.service';
 import { ThemeToggleComponent } from '../shared/theme-toggle/theme-toggle.component';
@@ -19,6 +20,7 @@ type Status = 'joining' | 'searching' | 'no_match' | 'failed';
 export class MatchmakingComponent implements OnInit, OnDestroy {
   private readonly matchmaking = inject(MatchmakingApiService);
   private readonly users = inject(UserApiService);
+  private readonly realtime = inject(ChatRealtimeService);
   private readonly router = inject(Router);
   private readonly zone = inject(NgZone);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -30,6 +32,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   private abortController?: AbortController;
 
   ngOnInit(): void {
+    this.realtime.connect();
     this.doSearch();
   }
 
@@ -70,6 +73,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
           preferredGender: profile.preferredGender,
           minAge: profile.minAge,
           maxAge: profile.maxAge,
+          intent: profile.intent,
         };
 
         return this.matchmaking.join(prefs).pipe(
@@ -105,5 +109,6 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   private cancel(): void {
     this.sub?.unsubscribe();
     this.abortController?.abort();
+    this.matchmaking.leaveQueue().subscribe({ error: () => {} });
   }
 }

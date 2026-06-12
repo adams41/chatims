@@ -29,6 +29,10 @@ export class ChatApiService {
     return this.http.get<RevealedProfile>(`${this.base}/chats/${chatId}/reveal`);
   }
 
+  shareContacts(chatId: number): Observable<RevealedProfile> {
+    return this.http.post<RevealedProfile>(`${this.base}/chats/${chatId}/share-contacts`, {});
+  }
+
   leaveChat(chatId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/chats/${chatId}`);
   }

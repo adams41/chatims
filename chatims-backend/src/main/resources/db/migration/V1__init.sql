@@ -13,24 +13,6 @@ CREATE TABLE chats (
     chat_id BIGSERIAL PRIMARY KEY
 );
 
-CREATE TABLE chat_participants (
-    chat_id BIGINT NOT NULL REFERENCES chats(chat_id) ON DELETE CASCADE,
-    participant VARCHAR(255) NOT NULL
-);
-
-CREATE INDEX idx_chat_participants_chat ON chat_participants(chat_id);
-CREATE INDEX idx_chat_participants_participant ON chat_participants(participant);
-
-CREATE TABLE messages (
-    id BIGSERIAL PRIMARY KEY,
-    chat_id BIGINT NOT NULL REFERENCES chats(chat_id) ON DELETE CASCADE,
-    sender_id BIGINT NOT NULL,
-    content TEXT NOT NULL,
-    send_timestamp TIMESTAMP NOT NULL
-);
-
-CREATE INDEX idx_messages_chat ON messages(chat_id, send_timestamp);
-CREATE INDEX idx_messages_sender ON messages(sender_id);
 
 CREATE TABLE swipes (
     id BIGSERIAL PRIMARY KEY,

@@ -54,8 +54,6 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/actuator/health",
                                 "/actuator/info",
-                                // SockJS HTTP handshake. Auth is enforced in the STOMP
-                                // CONNECT frame by StompAuthChannelInterceptor.
                                 "/ws/**"
                         ).permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")

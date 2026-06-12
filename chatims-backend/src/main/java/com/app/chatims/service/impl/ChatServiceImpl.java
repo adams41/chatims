@@ -7,11 +7,14 @@ import com.app.chatims.entity.ChatEntity;
 import com.app.chatims.entity.UserEntity;
 import com.app.chatims.exception.ChatNotFoundException;
 import com.app.chatims.repository.ChatRepository;
+import com.app.chatims.repository.UserPhotoRepository;
 import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.ChatService;
+import com.app.chatims.service.MessageService;
 import com.app.chatims.util.ChatStatus;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +35,8 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
+    private final UserPhotoRepository userPhotoRepository;
+    private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -89,7 +95,52 @@ public class ChatServiceImpl implements ChatService {
         Long otherId = chat.otherParticipant(viewerUserId);
         UserEntity partner = userRepository.findById(otherId)
                 .orElseThrow(() -> new ChatNotFoundException("Partner missing for chat " + chatId));
-        return RevealedProfileDto.from(partner);
+        List<String> photos = userPhotoRepository
+                .findByUserIdOrderByPositionAsc(partner.getUserId())
+                .stream()
+                .map(photo -> photo.getPhotoPath())
+                .toList();
+        boolean isUser1 = chat.getUser1Id().equals(viewerUserId);
+        boolean youShared = isUser1 ? chat.isUser1SharedContacts() : chat.isUser2SharedContacts();
+        boolean partnerShared = isUser1 ? chat.isUser2SharedContacts() : chat.isUser1SharedContacts();
+        return RevealedProfileDto.from(partner, photos, youShared, partnerShared);
+    }
+
+    @Override
+    @Transactional
+    public RevealedProfileDto shareContacts(Long chatId, Long sharerUserId) {
+        ChatEntity chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new ChatNotFoundException("Chat not found: " + chatId));
+        if (!chat.involves(sharerUserId)) {
+            throw new AccessDeniedException("Not a participant of chat " + chatId);
+        }
+        if (!chat.isMutualMatch()) {
+            throw new AccessDeniedException("Sharing contacts requires mutual like");
+        }
+        boolean isUser1 = chat.getUser1Id().equals(sharerUserId);
+        if (isUser1) chat.setUser1SharedContacts(true);
+        else chat.setUser2SharedContacts(true);
+        chatRepository.save(chat);
+        if (chat.isMutualContactShare()) {
+            pushRevealToUser(chat, chat.otherParticipant(sharerUserId));
+        }
+        return getRevealedProfile(chatId, sharerUserId);
+    }
+
+    private void pushRevealToUser(ChatEntity chat, Long recipientId) {
+        userRepository.findById(recipientId).ifPresent(recipient -> {
+            try {
+                RevealedProfileDto dto = getRevealedProfile(chat.getChatId(), recipientId);
+                messagingTemplate.convertAndSendToUser(
+                        recipient.getKeycloakId(),
+                        "/queue/reveal",
+                        dto
+                );
+            } catch (Exception e) {
+                log.warn("Failed to push reveal update for chat {} to user {}: {}",
+                        chat.getChatId(), recipientId, e.getMessage());
+            }
+        });
     }
 
     @Override
@@ -105,6 +156,7 @@ public class ChatServiceImpl implements ChatService {
             if (chat.involves(userId) && chat.getStatus() == ChatStatus.ACTIVE) {
                 chat.setStatus(ChatStatus.ENDED);
                 chatRepository.save(chat);
+                purgeMessages(chatId);
                 pushSessionToPartner(chat, userId);
             }
         });
@@ -120,10 +172,15 @@ public class ChatServiceImpl implements ChatService {
         if (chat.getStatus() == ChatStatus.ACTIVE && LocalDateTime.now().isAfter(chat.getEndsAt())) {
             chat.setStatus(ChatStatus.ENDED);
             chatRepository.save(chat);
+            purgeMessages(chat.getChatId());
             pushSessionToUser(chat, chat.getUser1Id());
             pushSessionToUser(chat, chat.getUser2Id());
         }
         return chat;
+    }
+
+    private void purgeMessages(Long chatId) {
+        messageService.purgeChat(chatId);
     }
 
     private void pushSessionToPartner(ChatEntity chat, Long actingUserId) {

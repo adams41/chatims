@@ -45,6 +45,9 @@
             <span class="field-error">Password is required.</span>
           }
         </div>
+        <p class="forgot-row">
+          <a routerLink="/forgot-password" class="link">Forgot password?</a>
+        </p>
         <button type="submit" class="btn btn-primary btn-full" [disabled]="loading()">
           @if (loading()) { <span class="spin"></span> Signing in… } @else { Sign in }
         </button>
@@ -80,6 +83,29 @@
           <label>Confirm password</label>
           <input type="password" formControlName="confirm" placeholder="Repeat password" autocomplete="new-password" />
         </div>
+        <div class="field">
+          <label>Invite code</label>
+          <input type="text" formControlName="inviteCode" placeholder="Closed beta — invite required" autocomplete="off" />
+          @if (fieldInvalid('register', 'inviteCode')) {
+            <span class="field-error">Invite code is required.</span>
+          }
+        </div>
+        <label class="age-confirm">
+          <input type="checkbox" formControlName="ageConfirm" />
+          <span>I confirm I am 18 or older.</span>
+        </label>
+        @if (fieldInvalid('register', 'ageConfirm')) {
+          <span class="field-error">You must confirm you are 18+.</span>
+        }
+        <label class="age-confirm">
+          <input type="checkbox" formControlName="termsConfirm" />
+          <span>I have read and accept the
+            <button type="button" class="link-btn" (click)="openLegalModal('terms')">Terms of Use</button> and
+            <button type="button" class="link-btn" (click)="openLegalModal('privacy')">Privacy Policy</button>.</span>
+        </label>
+        @if (fieldInvalid('register', 'termsConfirm')) {
+          <span class="field-error">You must accept the Terms and Privacy Policy.</span>
+        }
         <button type="submit" class="btn btn-primary btn-full" [disabled]="loading()">
           @if (loading()) { <span class="spin"></span> Creating account… } @else { Create account }
         </button>
@@ -89,3 +115,24 @@
 
   </div>
 </section>
+
+@if (legalModal()) {
+  <div class="legal-modal-backdrop" (click)="legalModal.set(null)">
+    <div class="legal-modal" (click)="$event.stopPropagation()">
+      <div class="legal-modal-header">
+        <h3>{{ legalModal() === 'terms' ? 'Terms of Use' : 'Privacy Policy' }}</h3>
+        <button type="button" class="legal-modal-close" (click)="legalModal.set(null)">✕</button>
+      </div>
+      <div class="legal-modal-body">
+        @if (legalContent()) {
+          <div [innerHTML]="legalContent()"></div>
+        } @else {
+          <div class="spinner" style="margin: 2rem auto;"></div>
+        }
+      </div>
+      <div class="legal-modal-footer">
+        <button type="button" class="btn btn-primary" (click)="legalModal.set(null)">Close</button>
+      </div>
+    </div>
+  </div>
+}

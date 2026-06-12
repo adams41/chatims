@@ -3,7 +3,7 @@ import { Client, IFrame, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ChatMessage, ChatSession } from '../models';
+import { ChatMessage, ChatSession, RevealedProfile } from '../models';
 import { KeycloakService } from './keycloak.service';
 
 export interface TypingEvent {
@@ -11,16 +11,10 @@ export interface TypingEvent {
   typing: boolean;
 }
 
-/**
- * STOMP client wrapping @stomp/stompjs. Owns a single connection that streams
- * three user-scoped destinations:
- *   /user/queue/messages   — new messages from the partner
- *   /user/queue/session    — chat status updates (like, end, expire)
- *   /user/queue/typing     — partner typing on/off
- *
- * The connection is established lazily on first connect() call. Reconnect is
- * handled by the underlying client with exponential backoff.
- */
+export interface MatchRemovedEvent {
+  partnerId: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatRealtimeService implements OnDestroy {
   private readonly keycloak = inject(KeycloakService);
@@ -32,14 +26,15 @@ export class ChatRealtimeService implements OnDestroy {
   private readonly message$ = new Subject<ChatMessage>();
   private readonly session$ = new Subject<ChatSession>();
   private readonly typing$ = new Subject<TypingEvent>();
+  private readonly matchRemoved$ = new Subject<MatchRemovedEvent>();
+  private readonly reveal$ = new Subject<RevealedProfile>();
   private readonly connectionState$ = new Subject<'connected' | 'disconnected'>();
 
-  /** Hot stream of new messages addressed to this user. */
   messages(): Observable<ChatMessage> { return this.message$.asObservable(); }
-  /** Hot stream of session updates pushed by the server. */
   sessions(): Observable<ChatSession> { return this.session$.asObservable(); }
-  /** Hot stream of typing on/off events from the current partner. */
   typing(): Observable<TypingEvent> { return this.typing$.asObservable(); }
+  matchRemoved(): Observable<MatchRemovedEvent> { return this.matchRemoved$.asObservable(); }
+  reveals(): Observable<RevealedProfile> { return this.reveal$.asObservable(); }
   connectionState(): Observable<'connected' | 'disconnected'> {
     return this.connectionState$.asObservable();
   }
@@ -48,20 +43,15 @@ export class ChatRealtimeService implements OnDestroy {
     if (this.client?.active) return;
 
     const token = this.keycloak.getToken();
-    if (!token) {
-      console.warn('[realtime] no JWT — skipping connect');
-      return;
-    }
+    if (!token) return;
 
     this.client = new Client({
-      // SockJS is plain HTTP under the hood, so we feed the http(s) URL — not ws://.
       webSocketFactory: () => new SockJS(`${environment.apiUrl}/ws`),
-      // STOMP-level auth. The server's StompAuthChannelInterceptor reads this on CONNECT.
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 2000,
       heartbeatIncoming: 10_000,
       heartbeatOutgoing: 10_000,
-      debug: () => {}, // silence stompjs's verbose console output
+      debug: () => {},
       onConnect: () => this.zone.run(() => {
         this.subscribeAll();
         this.connectionState$.next('connected');
@@ -82,7 +72,6 @@ export class ChatRealtimeService implements OnDestroy {
     this.client = null;
   }
 
-  /** Emit a typing on/off event. Caller throttles. */
   sendTyping(chatId: number, typing: boolean): void {
     if (!this.client?.connected) return;
     this.client.publish({
@@ -93,6 +82,8 @@ export class ChatRealtimeService implements OnDestroy {
 
   private subscribeAll(): void {
     if (!this.client) return;
+    this.subs.forEach(s => { try { s.unsubscribe(); } catch {} });
+    this.subs = [];
     this.subs.push(
       this.client.subscribe('/user/queue/messages', (m: IMessage) =>
         this.zone.run(() => this.safeParse<ChatMessage>(m, this.message$))
@@ -102,6 +93,12 @@ export class ChatRealtimeService implements OnDestroy {
       ),
       this.client.subscribe('/user/queue/typing', (m: IMessage) =>
         this.zone.run(() => this.safeParse<TypingEvent>(m, this.typing$))
+      ),
+      this.client.subscribe('/user/queue/match-removed', (m: IMessage) =>
+        this.zone.run(() => this.safeParse<MatchRemovedEvent>(m, this.matchRemoved$))
+      ),
+      this.client.subscribe('/user/queue/reveal', (m: IMessage) =>
+        this.zone.run(() => this.safeParse<RevealedProfile>(m, this.reveal$))
       ),
     );
   }

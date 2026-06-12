@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { ThemeService } from './theme.service';
 
 interface StoredTokens {
   accessToken: string;
@@ -55,15 +56,24 @@ export class KeycloakService {
   }
 
   get fullName(): string {
-    return this.parseClaim<string>('name') ?? '';
+    return this.parseClaim<string>('given_name')
+        ?? this.parseClaim<string>('name')?.split(' ')[0]
+        ?? '';
   }
 
   get email(): string | null {
     return this.parseClaim<string>('email') ?? null;
   }
 
+  get emailVerified(): boolean {
+    return this.parseClaim<boolean>('email_verified') === true;
+  }
+
+  private readonly themeService = inject(ThemeService);
+
   logout(): void {
     this.clearTokens();
+    this.themeService.disableRemoteSync();
     this.router.navigate(['/']);
   }
 

@@ -87,6 +87,28 @@
 }
 .legal { color: var(--text-muted); font-size: 0.75rem; margin: 0; }
 
+.age-badge {
+  margin-top: 12px;
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--text-muted);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.beta-badge {
+  margin-top: 6px;
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px dashed var(--text-muted);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 8px rgba(235,15,15,0.4), 0 0 16px rgba(37,19,196,0.25); }
   50%       { box-shadow: 0 0 14px rgba(235,15,15,0.7), 0 0 22px rgba(37,19,196,0.45); }

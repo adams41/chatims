@@ -11,9 +11,9 @@ const runtime = (typeof window !== 'undefined' ? window.__env : undefined) ?? {}
 
 export const environment = {
   production: false,
-  apiUrl: runtime.apiUrl ?? 'http://172.20.10.2:8081',
+  apiUrl: runtime.apiUrl ?? 'http://localhost:8081',
   keycloak: {
-    url: runtime.keycloak?.url ?? 'http://172.20.10.2:8180',
+    url: runtime.keycloak?.url ?? 'http://localhost:8180',
     realm: runtime.keycloak?.realm ?? 'chatims-app',
     clientId: runtime.keycloak?.clientId ?? 'chatims-client',
   },
