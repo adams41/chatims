@@ -1,0 +1,21 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: chatims-caddy-paused
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile.paused:/etc/caddy/Caddyfile:ro
+      - ./caddy/killswitch:/killswitch:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+    external: true
+    name: chatims_caddy-data
+  caddy-config:
+    external: true
+    name: chatims_caddy-config
