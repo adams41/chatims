@@ -472,6 +472,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
             this.partnerLeftEarly.set(true);
           }
           this.session.set(session);
+          if (session.mutualMatch && !this.revealed() && !this.initialMatchState) {
+            this.fetchReveal();
+          }
         },
         error: () => {},
       });

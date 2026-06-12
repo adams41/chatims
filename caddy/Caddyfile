@@ -17,6 +17,10 @@ api.chatims.app {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
         header_up X-Forwarded-Proto {scheme}
+        transport http {
+            dial_timeout 10s
+            response_header_timeout 0s
+        }
     }
     header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 }
