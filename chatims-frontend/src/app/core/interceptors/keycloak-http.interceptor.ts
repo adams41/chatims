@@ -24,22 +24,17 @@ export const keycloakHttpInterceptor: HttpInterceptorFn = (req, next) => {
   return next(addToken(req)).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
-        const refreshToken = keycloak.getRefreshToken();
-        if (refreshToken) {
-          return authApi.refresh(refreshToken).pipe(
-            switchMap(tokens => {
-              keycloak.storeTokens(tokens.accessToken, tokens.refreshToken, tokens.expiresIn);
-              return next(addToken(req));
-            }),
-            catchError(() => {
-              keycloak.clearTokens();
-              router.navigate(['/']);
-              return throwError(() => err);
-            })
-          );
-        }
-        keycloak.clearTokens();
-        router.navigate(['/']);
+        return authApi.refresh().pipe(
+          switchMap(tokens => {
+            keycloak.storeTokens(tokens.accessToken, tokens.expiresIn);
+            return next(addToken(req));
+          }),
+          catchError(() => {
+            keycloak.clearTokens();
+            router.navigate(['/']);
+            return throwError(() => err);
+          })
+        );
       }
       return throwError(() => err);
     })

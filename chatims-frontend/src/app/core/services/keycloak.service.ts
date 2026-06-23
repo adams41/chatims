@@ -1,10 +1,11 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { ThemeService } from './theme.service';
 
 interface StoredTokens {
   accessToken: string;
-  refreshToken: string;
   expiresAt: number;
 }
 
@@ -15,10 +16,9 @@ export class KeycloakService {
   constructor(private router: Router) {}
 
 
-  storeTokens(accessToken: string, refreshToken: string, expiresIn: number): void {
+  storeTokens(accessToken: string, expiresIn: number): void {
     const data: StoredTokens = {
       accessToken,
-      refreshToken,
       expiresAt: Date.now() + expiresIn * 1000 - 30_000, // 30s buffer
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -31,11 +31,6 @@ export class KeycloakService {
   getToken(): string | null {
     const data = this.loadStored();
     return data?.accessToken ?? null;
-  }
-
-  getRefreshToken(): string | null {
-    const data = this.loadStored();
-    return data?.refreshToken ?? null;
   }
 
   get isTokenValid(): boolean {
@@ -70,8 +65,11 @@ export class KeycloakService {
   }
 
   private readonly themeService = inject(ThemeService);
+  private readonly http = inject(HttpClient);
 
   logout(): void {
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
+      .subscribe({ next: () => {}, error: () => {} });
     this.clearTokens();
     this.themeService.disableRemoteSync();
     this.router.navigate(['/']);

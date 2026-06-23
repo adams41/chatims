@@ -5,7 +5,6 @@ import { environment } from '../../../environments/environment';
 
 export interface TokenResponse {
   accessToken: string;
-  refreshToken: string;
   expiresIn: number;
 }
 
@@ -15,14 +14,33 @@ export class AuthApiService {
   private readonly base = environment.apiUrl;
 
   login(username: string, password: string): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.base}/auth/login`, { username, password });
+    return this.http.post<TokenResponse>(
+      `${this.base}/auth/login`,
+      { username, password },
+      { withCredentials: true },
+    );
   }
 
   register(name: string, email: string, password: string, inviteCode: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.base}/auth/register`, { name, email, password, inviteCode });
+    return this.http.post<{ message: string }>(
+      `${this.base}/auth/register`,
+      { name, email, password, inviteCode },
+    );
   }
 
-  refresh(refreshToken: string): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.base}/auth/refresh`, { refreshToken });
+  refresh(): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(
+      `${this.base}/auth/refresh`,
+      {},
+      { withCredentials: true },
+    );
+  }
+
+  logout(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.base}/auth/logout`,
+      {},
+      { withCredentials: true },
+    );
   }
 }

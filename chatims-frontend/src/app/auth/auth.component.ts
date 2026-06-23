@@ -60,7 +60,7 @@ export class AuthComponent {
     const { username, password } = this.loginForm.value;
     this.authApi.login(username!, password!).subscribe({
       next: tokens => {
-        this.keycloak.storeTokens(tokens.accessToken, tokens.refreshToken, tokens.expiresIn);
+        this.keycloak.storeTokens(tokens.accessToken, tokens.expiresIn);
         this.router.navigate(['/welcome']);
       },
       error: err => {
@@ -85,7 +85,7 @@ export class AuthComponent {
         setTimeout(() => {
           this.authApi.login(v.email!, v.password!).subscribe({
             next: tokens => {
-              this.keycloak.storeTokens(tokens.accessToken, tokens.refreshToken, tokens.expiresIn);
+              this.keycloak.storeTokens(tokens.accessToken, tokens.expiresIn);
               this.router.navigate(['/welcome']);
             },
             error: () => {
