@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -46,7 +47,7 @@ public class ChatServiceImpl implements ChatService {
         chat.setUser1Id(user1.getUserId());
         chat.setUser2Id(user2.getUserId());
         chat.setStatus(ChatStatus.ACTIVE);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         chat.setStartedAt(now);
         chat.setEndsAt(now.plus(CHAT_DURATION));
         chat.setUser1Liked(false);
@@ -169,7 +170,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private ChatEntity expireIfNeeded(ChatEntity chat) {
-        if (chat.getStatus() == ChatStatus.ACTIVE && LocalDateTime.now().isAfter(chat.getEndsAt())) {
+        if (chat.getStatus() == ChatStatus.ACTIVE && LocalDateTime.now(ZoneOffset.UTC).isAfter(chat.getEndsAt())) {
             chat.setStatus(ChatStatus.ENDED);
             chatRepository.save(chat);
             purgeMessages(chat.getChatId());

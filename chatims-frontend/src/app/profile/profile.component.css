@@ -1,6 +1,7 @@
-o.profile-screen {
+.profile-screen {
   min-height: 100vh;
-  padding: 3rem 1rem 5rem;
+  min-height: 100dvh;
+  padding: calc(3rem + env(safe-area-inset-top)) 1rem calc(5rem + env(safe-area-inset-bottom));
   overflow-y: auto;
 }
 

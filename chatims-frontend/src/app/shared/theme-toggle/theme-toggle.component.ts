@@ -17,8 +17,8 @@ import { ThemeService } from '../../core/services/theme.service';
   styles: [`
     .theme-toggle {
       position: fixed;
-      top: 14px;
-      right: 14px;
+      top: max(14px, env(safe-area-inset-top));
+      right: max(14px, env(safe-area-inset-right));
       width: 40px;
       height: 40px;
       border-radius: 50%;

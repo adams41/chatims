@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Getter
@@ -26,5 +27,5 @@ public class UserPhotoEntity {
     private String photoPath;
 
     @Column(name = "uploaded_at", nullable = false)
-    private LocalDateTime uploadedAt = LocalDateTime.now();
+    private LocalDateTime uploadedAt = LocalDateTime.now(ZoneOffset.UTC);
 }

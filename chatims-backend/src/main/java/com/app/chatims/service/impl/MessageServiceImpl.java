@@ -16,6 +16,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -42,7 +43,7 @@ public class MessageServiceImpl implements MessageService {
         if (!chat.involves(senderId)) {
             throw new AccessDeniedException("Not a participant of chat " + chatId);
         }
-        if (chat.getStatus() != ChatStatus.ACTIVE || LocalDateTime.now().isAfter(chat.getEndsAt())) {
+        if (chat.getStatus() != ChatStatus.ACTIVE || LocalDateTime.now(ZoneOffset.UTC).isAfter(chat.getEndsAt())) {
             throw new MessageSendException("Chat is not active");
         }
 
@@ -51,7 +52,7 @@ public class MessageServiceImpl implements MessageService {
                 chatId,
                 senderId,
                 content,
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneOffset.UTC)
         );
         chatMessages.computeIfAbsent(chatId, k -> new CopyOnWriteArrayList<>()).add(dto);
         pushToRecipient(chat, senderId, dto);

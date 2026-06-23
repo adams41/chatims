@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -57,7 +58,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         seeker.setMaxAge(preferences.maxAge());
         seeker.setIntent(preferences.intent());
         seeker.setPreferencesSet(true);
-        seeker.setLastSeenAt(LocalDateTime.now());
+        seeker.setLastSeenAt(LocalDateTime.now(ZoneOffset.UTC));
         userRepository.save(seeker);
 
         chatRepository.findActiveChatsForUser(ChatStatus.ACTIVE, seeker.getUserId(), PageRequest.of(0, 10))
@@ -69,7 +70,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         entry.setPreferredGender(preferences.preferredGender());
         entry.setMinAge(preferences.minAge());
         entry.setMaxAge(preferences.maxAge());
-        entry.setJoinedAt(LocalDateTime.now());
+        entry.setJoinedAt(LocalDateTime.now(ZoneOffset.UTC));
         queueRepository.save(entry);
         log.info("User {} joined matchmaking queue", seeker.getUserId());
     }
@@ -82,7 +83,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         for (int i = 0; i < POLL_ATTEMPTS; i++) {
             List<ChatEntity> activeChats = chatRepository.findActiveChatsForUser(
                     ChatStatus.ACTIVE, seeker.getUserId(), PageRequest.of(0, 1));
-            if (!activeChats.isEmpty() && LocalDateTime.now().isBefore(activeChats.get(0).getEndsAt())) {
+            if (!activeChats.isEmpty() && LocalDateTime.now(ZoneOffset.UTC).isBefore(activeChats.get(0).getEndsAt())) {
                 log.info("User {} picked up chat {} created by partner", seeker.getUserId(), activeChats.get(0).getChatId());
                 queueRepository.deleteById(seeker.getUserId());
                 return chatService.getSessionFor(activeChats.get(0).getChatId(), seeker.getUserId());
@@ -111,7 +112,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     private static final int REMATCH_COOLDOWN_HOURS = 24;
 
     protected List<UserEntity> findCandidates(UserEntity seeker) {
-        LocalDateTime cooldownSince = LocalDateTime.now().minusHours(REMATCH_COOLDOWN_HOURS);
+        LocalDateTime cooldownSince = LocalDateTime.now(ZoneOffset.UTC).minusHours(REMATCH_COOLDOWN_HOURS);
         List<Long> excludedPartners = chatRepository.findExcludedPartnerIds(seeker.getUserId(), cooldownSince);
         List<Long> excluded = excludedPartners.isEmpty() ? List.of(-1L) : excludedPartners;
         List<UserEntity> candidates = queueRepository.findCompatibleCandidates(

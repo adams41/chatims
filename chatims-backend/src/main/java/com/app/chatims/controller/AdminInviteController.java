@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class AdminInviteController {
         if (expiresInDays != null && (expiresInDays < 1 || expiresInDays > 365)) {
             return ResponseEntity.badRequest().body(Map.of("message", "expiresInDays must be 1..365"));
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         LocalDateTime expiresAt = expiresInDays != null ? now.plusDays(expiresInDays) : null;
 
         List<String> generated = new ArrayList<>(count);

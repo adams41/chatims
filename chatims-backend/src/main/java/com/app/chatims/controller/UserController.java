@@ -15,6 +15,7 @@ import com.app.chatims.repository.UserRepository;
 import com.app.chatims.service.UserService;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Set;
 import com.app.chatims.util.AuthUtils;
 import com.app.chatims.util.Gender;
@@ -279,7 +280,7 @@ public class UserController {
         report.setChatId(chatId);
         report.setReason(reason);
         report.setDetails(details != null && details.length() > 1000 ? details.substring(0, 1000) : details);
-        report.setCreatedAt(LocalDateTime.now());
+        report.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
         reportRepository.save(report);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("status", "reported"));
     }

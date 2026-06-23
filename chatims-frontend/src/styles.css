@@ -219,8 +219,8 @@ a:hover { color: var(--color-primary-hover); }
 /* ============ Back button ============ */
 .back-btn {
   position: fixed;
-  top: 14px;
-  left: 14px;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
   z-index: 9998;
   width: 38px;
   height: 38px;

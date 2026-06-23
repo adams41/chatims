@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -183,7 +184,7 @@ public class UserServiceImpl implements UserService {
                 })
                 .filter(m -> m != null)
                 .toList();
-        return new DataExportDto(LocalDateTime.now(), DataExportDto.Profile.from(user), matches);
+        return new DataExportDto(LocalDateTime.now(ZoneOffset.UTC), DataExportDto.Profile.from(user), matches);
     }
 
     @Override
@@ -261,7 +262,7 @@ public class UserServiceImpl implements UserService {
         if (mutual.isEmpty()) {
             throw new IllegalStateException("No active match with this user.");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         mutual.forEach(c -> {
             c.setMatchRemovedAt(now);
             chatRepository.save(c);

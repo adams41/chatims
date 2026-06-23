@@ -1,7 +1,7 @@
 .legal-container {
   max-width: 760px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: calc(2rem + env(safe-area-inset-top)) 1.5rem calc(4rem + env(safe-area-inset-bottom));
   font-family: system-ui, sans-serif;
   color: var(--color-text);
   line-height: 1.7;

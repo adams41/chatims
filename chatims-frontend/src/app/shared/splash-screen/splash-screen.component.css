@@ -25,13 +25,15 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 80px 20px 40px;
+  min-height: 100dvh;
+  padding: calc(80px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   text-align: center;
   gap: 24px;
   background: var(--bg);
   color: var(--text);
   transition: background 0.3s, color 0.3s;
+  position: relative;
 }
 
 /* ── Lottie ── */
@@ -127,8 +129,8 @@
 /* ── Dark/light toggle ── */
 .theme-toggle {
   position: fixed;
-  top: 18px;
-  right: 18px;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
   background: var(--hamburger-bg);
   border: none;
   border-radius: 50%;
@@ -149,8 +151,8 @@
 /* ── Hamburger + menu ── */
 .outer-menu {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: max(20px, env(safe-area-inset-top));
+  left: max(20px, env(safe-area-inset-left));
   z-index: 9999;
 }
 .checkbox-toggle {

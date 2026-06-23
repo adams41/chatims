@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 
@@ -53,14 +54,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("message", "This invite code has already been used."));
         }
-        if (invite.get().getExpiresAt() != null && invite.get().getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (invite.get().getExpiresAt() != null && invite.get().getExpiresAt().isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("message", "This invite code has expired."));
         }
         try {
             keycloakAdmin.createUser(req.name(), req.email(), req.password());
             InviteCodeEntity entry = invite.get();
-            entry.setUsedAt(LocalDateTime.now());
+            entry.setUsedAt(LocalDateTime.now(ZoneOffset.UTC));
             inviteCodeRepository.save(entry);
             return ResponseEntity.ok(Map.of("message", "Account created. You can now sign in."));
         } catch (IllegalStateException e) {
