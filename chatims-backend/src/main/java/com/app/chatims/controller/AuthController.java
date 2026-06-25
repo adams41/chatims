@@ -89,7 +89,13 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("message", "Invalid credentials."));
             }
-            setRefreshCookie(response, tokens.path("refresh_token").asText(""));
+            String refreshToken = tokens.path("refresh_token").asText("");
+            if (refreshToken.isEmpty()) {
+                log.error("Keycloak login succeeded but returned no refresh_token");
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("message", "Login failed. Please try again."));
+            }
+            setRefreshCookie(response, refreshToken);
             return ResponseEntity.ok(Map.of(
                     "accessToken", tokens.path("access_token").asText(""),
                     "expiresIn",   tokens.path("expires_in").asInt(300)
@@ -118,7 +124,14 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("message", "Refresh token expired. Please sign in again."));
             }
-            setRefreshCookie(response, tokens.path("refresh_token").asText(""));
+            String newRefreshToken = tokens.path("refresh_token").asText("");
+            if (newRefreshToken.isEmpty()) {
+                clearRefreshCookie(response);
+                log.error("Keycloak refresh succeeded but returned no refresh_token");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Session expired. Please sign in again."));
+            }
+            setRefreshCookie(response, newRefreshToken);
             return ResponseEntity.ok(Map.of(
                     "accessToken", tokens.path("access_token").asText(""),
                     "expiresIn",   tokens.path("expires_in").asInt(300)

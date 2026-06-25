@@ -52,4 +52,6 @@ public interface ChatRepository extends JpaRepository<ChatEntity, Long> {
              AND (c.startedAt >= :since OR (c.user1Liked = true AND c.user2Liked = true AND c.matchRemovedAt IS NULL))
            """)
     List<Long> findExcludedPartnerIds(@Param("userId") Long userId, @Param("since") LocalDateTime since);
+
+    List<ChatEntity> findByStatusAndEndsAtBefore(ChatStatus status, LocalDateTime endsAt);
 }

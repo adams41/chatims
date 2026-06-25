@@ -191,9 +191,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteAccount(String keycloakId) {
         UserEntity user = getUserByKeycloakId(keycloakId);
-        String photoPath = user.getPhotoPath();
+        List<String> photoPaths = userPhotoRepository
+                .findByUserIdOrderByPositionAsc(user.getUserId())
+                .stream().map(UserPhotoEntity::getPhotoPath).toList();
         userRepository.delete(user);
-        deletePhotoFile(photoPath);
+        if (user.getPhotoPath() != null) {
+            deletePhotoFile(user.getPhotoPath());
+        }
+        photoPaths.forEach(this::deletePhotoFile);
         try {
             keycloakAdminService.deleteUser(keycloakId);
         } catch (Exception e) {

@@ -152,6 +152,17 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
+    public void expireAllOverdueChats() {
+        List<ChatEntity> overdue = chatRepository.findByStatusAndEndsAtBefore(
+                ChatStatus.ACTIVE, LocalDateTime.now(ZoneOffset.UTC));
+        overdue.forEach(this::expireIfNeeded);
+        if (!overdue.isEmpty()) {
+            log.info("Expired {} overdue chat(s) via scheduled cleanup", overdue.size());
+        }
+    }
+
+    @Override
+    @Transactional
     public void leaveChat(Long chatId, Long userId) {
         chatRepository.findById(chatId).ifPresent(chat -> {
             if (chat.involves(userId) && chat.getStatus() == ChatStatus.ACTIVE) {
