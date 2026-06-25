@@ -268,6 +268,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   newSearch(): void { this.leaveAndNavigate('matchmaking'); }
+ 
+  viewMatches(): void { this.leaveAndNavigate('profile'); }
 
   skipPartner(): void {
     if (this.isEnded()) { this.leaveAndNavigate('matchmaking'); return; }
@@ -415,6 +417,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   private loadSession(): void {
     this.chatApi.getSession(this.chatId).subscribe({
       next: session => {
+ 
+        const ended = session.status === 'ENDED' || session.remainingSeconds <= 0;
+        if (ended) {
+          this.router.navigate(['/profile']);
+          return;
+        }
         this.session.set(session);
         this.initialMatchState = session.mutualMatch;
         this.loadingChat.set(false);
