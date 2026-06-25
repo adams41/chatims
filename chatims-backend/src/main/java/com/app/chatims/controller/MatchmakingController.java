@@ -88,7 +88,7 @@ public class MatchmakingController {
                 try { emitter.completeWithError(e); } catch (Exception ignored) {}
             }
         }, Instant.now());
-
+      
         emitter.onTimeout(() -> {
             matchmakingService.leaveQueue(keycloakId);
             emitter.complete();
